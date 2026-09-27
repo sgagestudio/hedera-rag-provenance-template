@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-
-import { anchorEvidence, MAX_EVIDENCE_BYTES } from "~~/lib/provenance";
+import { MAX_EVIDENCE_BYTES, anchorEvidence } from "~~/lib/provenance";
 
 export const runtime = "nodejs";
 
