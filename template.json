@@ -1,0 +1,56 @@
+{
+  "name": "rag-provenance",
+  "description": "Verifiable RAG source provenance using IPFS content addressing, Hedera Consensus Service attestations, and a small on-chain policy anchor.",
+  "create-scaffold-hbar": {
+    "capabilities": {
+      "frontend": ["nextjs-app"],
+      "solidityFramework": ["hardhat"],
+      "packageManager": ["yarn", "npm"]
+    },
+    "defaults": {
+      "frontend": "nextjs-app",
+      "solidityFramework": "hardhat",
+      "packageManager": "yarn"
+    },
+    "outro": {
+      "sections": [
+        {
+          "steps": [
+            {
+              "text": "RAG provenance template: content is addressed by IPFS CID, hashed locally, attested to Hedera Consensus Service, and tied to an on-chain policy anchor."
+            }
+          ]
+        },
+        {
+          "title": "Next steps",
+          "steps": [
+            {
+              "label": "Copy environment configuration",
+              "command": "cp packages/nextjs/.env.example packages/nextjs/.env.local"
+            },
+            {
+              "label": "Start a local IPFS Kubo daemon",
+              "text": "The app defaults to http://127.0.0.1:5001/api/v0 and supports a custom IPFS_API_URL."
+            },
+            {
+              "label": "Create an HCS provenance topic",
+              "command": "{run:next:provenance:create-topic}"
+            },
+            {
+              "label": "Fund the operator with testnet HBAR",
+              "url": "https://portal.hedera.com/faucet"
+            },
+            {
+              "label": "Deploy the policy anchor",
+              "command": "{run:hardhat:deploy} --network hederaTestnet"
+            },
+            {
+              "label": "Start the app",
+              "command": "{run:next:dev}"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
