@@ -1,13 +1,6 @@
-import crypto from "node:crypto";
-
-import {
-  AccountId,
-  Client,
-  PrivateKey,
-  TopicId,
-  TopicMessageSubmitTransaction,
-} from "@hiero-ledger/sdk";
+import { AccountId, Client, PrivateKey, TopicId, TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
 import { create as createIpfsClient } from "kubo-rpc-client";
+import crypto from "node:crypto";
 
 export const PROVENANCE_SCHEMA = "rag-provenance-v1";
 export const MAX_EVIDENCE_BYTES = 5 * 1024 * 1024;
