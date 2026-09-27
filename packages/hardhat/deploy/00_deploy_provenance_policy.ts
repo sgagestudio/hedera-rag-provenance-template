@@ -2,8 +2,6 @@ import { keccak256, toUtf8Bytes } from "ethers";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import type { DeployFunction } from "hardhat-deploy/types";
 
-import { getDeployGasPrice } from "../utils/getDeployGasPrice";
-
 const SCHEMA_ID = "rag-provenance-v1";
 
 const deployProvenancePolicy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -20,8 +18,6 @@ const deployProvenancePolicy: DeployFunction = async function (hre: HardhatRunti
     args: [topicId, schemaHash],
     log: true,
     autoMine: true,
-    gasLimit: "1200000",
-    gasPrice: await getDeployGasPrice(hre),
   });
 };
 
