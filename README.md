@@ -95,7 +95,7 @@ With `HEDERA_OPERATOR_ID` and `HEDERA_OPERATOR_KEY` set in `packages/nextjs/.env
 yarn next:provenance:create-topic
 ```
 
-Copy the printed topic ID into `HEDERA_TOPIC_ID`.
+Copy the printed topic ID into `HEDERA_TOPIC_ID`. The setup script assigns the operator public key as both the HCS admin key and submit key, so arbitrary third parties cannot forge provenance messages on the trusted topic.
 
 ### 4. Compile/test the policy anchor
 
