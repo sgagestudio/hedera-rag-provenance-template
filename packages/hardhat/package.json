@@ -6,7 +6,7 @@
     "account:generate": "hardhat run scripts/generateAccount.ts",
     "account:import": "hardhat run scripts/importAccount.ts",
     "account:reveal-pk": "hardhat run scripts/revealPK.ts",
-    "chain": "HEDERA_FORKING=true hardhat node --network hardhat --no-deploy",
+    "chain": "hardhat node --network hardhat --no-deploy",
     "check-types": "tsc --noEmit --incremental",
     "compile": "hardhat compile",
     "clean": "hardhat clean",
@@ -16,7 +16,7 @@
     "format": "prettier --write './**/*.(ts|sol)'",
     "lint": "eslint",
     "lint-staged": "eslint",
-    "test": "HEDERA_FORKING=true REPORT_GAS=true hardhat test",
+    "test": "REPORT_GAS=true hardhat test",
     "verify": "hardhat verify",
     "verify:testnet": "hardhat verify --network hederaTestnet",
     "verify:mainnet": "hardhat verify --network hederaMainnet"
