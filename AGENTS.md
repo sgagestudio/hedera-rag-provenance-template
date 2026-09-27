@@ -1,3 +1,22 @@
+# RAG provenance project rules
+
+This repository is a Scaffold-HBAR external template for the Hedera template bounty.
+
+Core invariant:
+`evidence bytes -> SHA-256 + IPFS CID -> HCS attestation -> independent verification`.
+
+Project-specific rules:
+- Keep evidence bytes off-chain. HCS carries compact public metadata only.
+- Never expose `HEDERA_OPERATOR_KEY` or other server credentials to client bundles.
+- Preserve deterministic hashing of the exact stored bytes.
+- Verification must recompute the digest from bytes retrieved by CID and independently read HCS through Mirror Node.
+- Do not replace real HCS integration with mocked data in the runnable template.
+- Keep the template usable after `npm create scaffold-hbar@latest --template sgagestudio/hedera-rag-provenance-template`.
+- Before submission, require clean install, lint/typecheck/build/tests and at least one public testnet transaction.
+- Do not commit `.env`, private keys, wallet seeds, credentials or generated secret material.
+
+---
+
 # Agent instructions
 
 This file is the shared briefing for coding agents in this repository (Cursor, Claude Code, Codex, and any other tool that reads `AGENTS.md`). Claude Code loads it through `CLAUDE.md`.
