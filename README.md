@@ -52,6 +52,20 @@ This repository is intended to satisfy the Scaffold-HBAR external-template gate:
 - verifiable Hedera testnet transaction before submission;
 - no committed secrets or `.env`.
 
+## Live testnet proof
+
+A real bounty proof has been produced and committed at `proofs/testnet-proof.json`.
+
+- HCS topic: `0.0.10750034`
+- transaction status: `SUCCESS`
+- HCS sequence: `1`
+- CID: `QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS`
+- SHA-256: `704d43948304f88adfe78a98f7f4f2b139a72062562aa20352f5588c387e3cc4`
+- HashScan: https://hashscan.io/testnet/transaction/0.0.10737175%401790547963.114160473
+- Mirror Node: https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10750034/messages/1
+
+The committed proof contains only public verification data. Operator credentials remain outside the repository.
+
 ## Prerequisites
 
 - Node.js >= 20.18.3
