@@ -68,7 +68,17 @@ corepack enable
 yarn install
 ```
 
-### 2. Configure server-only credentials
+### 2. Start IPFS
+
+The template includes a pinned Kubo Docker service with its RPC API and gateway bound to localhost:
+
+```bash
+yarn ipfs:up
+```
+
+This uses the official `ipfs/kubo:v0.43.1` image and persists repository data in a Docker volume. Stop it with `yarn ipfs:down`.
+
+### 3. Configure server-only credentials
 
 ```bash
 cp packages/nextjs/.env.example packages/nextjs/.env.local
@@ -87,7 +97,7 @@ IPFS_GATEWAY_URL=http://127.0.0.1:8080
 
 Never expose the operator key via a `NEXT_PUBLIC_*` variable.
 
-### 3. Create the HCS topic
+### 4. Create the HCS topic
 
 With `HEDERA_OPERATOR_ID` and `HEDERA_OPERATOR_KEY` set in `packages/nextjs/.env.local`:
 
@@ -97,7 +107,7 @@ yarn next:provenance:create-topic
 
 Copy the printed topic ID into `HEDERA_TOPIC_ID`. The setup script assigns the operator public key as both the HCS admin key and submit key, so arbitrary third parties cannot forge provenance messages on the trusted topic.
 
-### 4. Compile/test the policy anchor
+### 5. Compile/test the policy anchor
 
 ```bash
 yarn hardhat:compile
@@ -110,9 +120,9 @@ Deploy it after the HCS topic exists:
 HEDERA_TOPIC_ID=0.0.x yarn hardhat:deploy --network hederaTestnet
 ```
 
-### 5. Run the app
+### 6. Run the app
 
-Start Kubo, then:
+With Kubo running, execute:
 
 ```bash
 yarn next:dev
