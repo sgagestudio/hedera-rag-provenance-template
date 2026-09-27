@@ -43,7 +43,9 @@
     "postinstall": "husky",
     "precommit": "lint-staged",
     "lint-staged": "lint-staged",
-    "next:provenance:create-topic": "yarn workspace @sh/nextjs provenance:create-topic"
+    "next:provenance:create-topic": "yarn workspace @sh/nextjs provenance:create-topic",
+    "ipfs:up": "docker compose -f docker-compose.ipfs.yml up -d",
+    "ipfs:down": "docker compose -f docker-compose.ipfs.yml down"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
