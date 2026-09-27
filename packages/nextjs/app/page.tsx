@@ -1,157 +1,174 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { HederaPortalFaucet } from "@scaffold-hbar-ui/components";
+import { FormEvent, useState } from "react";
 import type { NextPage } from "next";
-import { useAccount } from "wagmi";
-import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { HederaAddress } from "~~/components/scaffold-hbar";
-import { useTargetNetwork } from "~~/hooks/scaffold-hbar";
+
+type AnchorResult = {
+  cid: string;
+  sha256: string;
+  topicId: string;
+  transactionId: string;
+  status: string;
+};
+
+type VerifyResult = {
+  verified: boolean;
+  cid: string;
+  sha256: string;
+  topicId: string;
+  sequenceNumber: number | null;
+  consensusTimestamp: string | null;
+};
 
 const Home: NextPage = () => {
-  const { address: connectedAddress, status } = useAccount();
-  const { targetNetwork } = useTargetNetwork();
+  const [file, setFile] = useState<File | null>(null);
+  const [sourceUri, setSourceUri] = useState("");
+  const [result, setResult] = useState<AnchorResult | null>(null);
+  const [verification, setVerification] = useState<VerifyResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-  const isReconnecting = status === "reconnecting" || status === "connecting";
-  const isConnected = status === "connected" && connectedAddress;
+  const anchor = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!file) return;
+
+    setBusy(true);
+    setError("");
+    setVerification(null);
+
+    try {
+      const body = new FormData();
+      body.set("file", file);
+      body.set("title", file.name);
+      if (sourceUri.trim()) body.set("sourceUri", sourceUri.trim());
+
+      const response = await fetch("/api/provenance", { method: "POST", body });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Unable to anchor evidence");
+
+      setResult(payload as AnchorResult);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to anchor evidence");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verify = async () => {
+    if (!result?.cid) return;
+
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/provenance/verify?cid=${encodeURIComponent(result.cid)}`);
+      const payload = await response.json();
+      if (!response.ok && response.status !== 404) throw new Error(payload.error || "Unable to verify evidence");
+      setVerification(payload as VerifyResult);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to verify evidence");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <>
-      <div className="flex items-center flex-col grow">
-        <div className="hedera-gradient dark:bg-none dark:bg-hedera-charcoal w-full py-16 px-5">
-          <div className="flex flex-col items-center max-w-2xl mx-auto">
-            <Image
-              src="/Hedera-Icon-White.svg"
-              alt="Hedera icon"
-              width={80}
-              height={80}
-              className="mb-6 hidden dark:block"
-            />
-            <Image src="/Hedera-Icon-Dark.svg" alt="Hedera icon" width={80} height={80} className="mb-6 dark:hidden" />
-            <div className="flex flex-col items-center gap-1 mb-4">
-              <span className="block text-lg font-medium tracking-widest uppercase text-white/80 dark:text-white/60">
-                Built on Hedera
-              </span>
-              <span className="block text-lg font-medium tracking-widest uppercase text-white/80 dark:text-white/60">
-                For
-              </span>
-              <Image
-                src="/Hedera-Wordmark-Lockup-White.svg"
-                alt="Hedera"
-                width={240}
-                height={48}
-                className="mt-1 hidden dark:block"
+    <main className="grow px-5 py-12">
+      <div className="mx-auto max-w-4xl space-y-8">
+        <section className="rounded-2xl border border-base-300 bg-base-100 p-8 shadow-lg">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-primary">Scaffold-HBAR template</p>
+          <h1 className="text-4xl font-bold">Verifiable RAG provenance</h1>
+          <p className="mt-4 max-w-2xl text-base-content/70">
+            Pin evidence to IPFS, hash the exact bytes, and timestamp the CID + digest on Hedera Consensus Service.
+            Anyone can later retrieve the content and verify that it matches the immutable HCS attestation.
+          </p>
+        </section>
+
+        <form onSubmit={anchor} className="rounded-2xl border border-base-300 bg-base-100 p-8 shadow-md">
+          <div className="space-y-5">
+            <label className="form-control w-full">
+              <span className="label-text mb-2 font-semibold">Evidence file</span>
+              <input
+                type="file"
+                className="file-input file-input-bordered w-full"
+                onChange={event => setFile(event.target.files?.[0] ?? null)}
+                required
               />
-              <Image
-                src="/Hedera-Wordmark-Lockup-Dark.svg"
-                alt="Hedera"
-                width={240}
-                height={48}
-                className="mt-1 dark:hidden"
+              <span className="mt-2 text-xs text-base-content/60">Template limit: 5 MiB.</span>
+            </label>
+
+            <label className="form-control w-full">
+              <span className="label-text mb-2 font-semibold">Original source URI (optional)</span>
+              <input
+                className="input input-bordered w-full"
+                placeholder="https://docs.example.com/page"
+                value={sourceUri}
+                onChange={event => setSourceUri(event.target.value)}
               />
-            </div>
+            </label>
+
+            <button className="btn btn-primary" disabled={!file || busy}>
+              {busy ? "Working…" : "Anchor provenance"}
+            </button>
           </div>
-        </div>
+        </form>
 
-        <div className="w-full max-w-4xl mx-auto px-5 -mt-8">
-          <div className="bg-base-100 rounded-2xl shadow-lg p-8">
-            {isReconnecting ? (
-              <div className="flex flex-col items-center gap-2">
-                <p className="font-semibold text-sm text-base-content/60 uppercase tracking-wider m-0">Connecting…</p>
-                <div className="h-8 w-48 rounded bg-base-200 animate-pulse" aria-hidden />
-              </div>
-            ) : isConnected ? (
-              <div className="flex flex-col items-center gap-2">
-                <p className="font-semibold text-sm text-base-content/60 uppercase tracking-wider m-0">
-                  Connected Address
-                </p>
-                <HederaAddress address={connectedAddress} chain={targetNetwork} />
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <p className="font-semibold text-sm text-base-content/60 uppercase tracking-wider m-0">
-                  Connect your wallet to get started
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        {error && <div className="alert alert-error">{error}</div>}
 
-        <div className="w-full max-w-4xl mx-auto px-5 mt-8 pb-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-base-100 rounded-2xl shadow-md p-8 text-center flex flex-col items-center hover:shadow-lg transition-shadow border border-base-300">
-              <div className="w-14 h-14 rounded-full hedera-gradient flex items-center justify-center mb-4">
-                <BugAntIcon className="h-7 w-7 text-white" />
+        {result && (
+          <section className="rounded-2xl border border-base-300 bg-base-100 p-8 shadow-md">
+            <h2 className="text-2xl font-bold">Attestation created</h2>
+            <dl className="mt-5 grid gap-4 text-sm">
+              <div>
+                <dt className="font-semibold">IPFS CID</dt>
+                <dd className="break-all font-mono">{result.cid}</dd>
               </div>
-              <h3 className="font-bold text-lg mb-2">Debug Contracts</h3>
-              <p className="text-base-content/70 text-sm m-0 mb-6">
-                Tinker with your smart contracts and test interactions in real time.
-              </p>
-              <Link href="/debug" passHref className="btn btn-primary btn-sm">
-                Open Debug
-              </Link>
-            </div>
+              <div>
+                <dt className="font-semibold">SHA-256</dt>
+                <dd className="break-all font-mono">{result.sha256}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">HCS topic</dt>
+                <dd className="font-mono">{result.topicId}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">Transaction</dt>
+                <dd className="break-all font-mono">{result.transactionId}</dd>
+              </div>
+            </dl>
 
-            <div className="bg-base-100 rounded-2xl shadow-md p-8 text-center flex flex-col items-center border border-base-300 relative">
-              <div className="w-14 h-14 rounded-full hedera-gradient flex items-center justify-center mb-4">
-                <MagnifyingGlassIcon className="h-7 w-7 text-white" />
-              </div>
-              <h3 className="font-bold text-lg mb-2">Block Explorer</h3>
-              <p className="text-base-content/70 text-sm m-0 mb-6">
-                Explore transactions, addresses, and contract activity on Hedera.
-              </p>
-              <Link href="/blockexplorer" passHref className="btn btn-primary btn-sm">
-                Open Block Explorer
-              </Link>
-            </div>
-          </div>
+            <button className="btn btn-secondary mt-6" onClick={verify} disabled={busy}>
+              Verify from IPFS + Mirror Node
+            </button>
+          </section>
+        )}
 
-          <div className="mt-8 bg-base-100 rounded-2xl shadow-md p-8 border border-base-300">
-            <h3 className="font-bold text-lg mb-4 text-center">Quick Start</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="flex items-start gap-3">
-                <span className="font-bold text-primary text-lg leading-none mt-0.5">1</span>
-                <div>
-                  <p className="m-0 font-medium">Edit the frontend</p>
-                  <code className="text-xs bg-base-200 px-2 py-1 rounded">packages/nextjs/app/page.tsx</code>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="font-bold text-primary text-lg leading-none mt-0.5">2</span>
-                <div>
-                  <p className="m-0 font-medium">Edit your contract</p>
-                  <code className="text-xs bg-base-200 px-2 py-1 rounded">
-                    packages/hardhat/contracts/YourContract.sol
-                  </code>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="font-bold text-primary text-lg leading-none mt-0.5">3</span>
-                <div>
-                  <p className="m-0 font-medium">Get testnet HBAR</p>
-                  <HederaPortalFaucet variant="link" label="portal.hedera.com/faucet" showIcon={false} />
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="font-bold text-primary text-lg leading-none mt-0.5">4</span>
-                <div>
-                  <p className="m-0 font-medium">Deploy to Hedera</p>
-                  <div className="flex flex-col gap-1">
-                    <code className="text-xs bg-base-200 px-2 py-1 rounded">
-                      yarn hardhat:deploy --network hederaTestnet
-                    </code>
-                    <code className="text-xs bg-base-200 px-2 py-1 rounded">
-                      yarn foundry:deploy --network hedera_testnet
-                    </code>
-                  </div>
-                </div>
+        {verification && (
+          <div className={`alert ${verification.verified ? "alert-success" : "alert-warning"}`}>
+            <div>
+              <div className="font-bold">{verification.verified ? "Verified" : "Not verified"}</div>
+              <div className="text-sm">
+                {verification.verified
+                  ? `HCS sequence #${verification.sequenceNumber} at ${verification.consensusTimestamp}`
+                  : "No matching HCS message was found for the bytes returned by the configured IPFS gateway."}
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        <section className="grid gap-4 md:grid-cols-3">
+          {[
+            ["1 · Store", "The evidence bytes are content-addressed and pinned through IPFS."],
+            ["2 · Attest", "CID, SHA-256 and source metadata are submitted to an HCS topic."],
+            ["3 · Verify", "Fetch by CID, re-hash locally, then match the attestation through Mirror Node."],
+          ].map(([title, text]) => (
+            <div key={title} className="rounded-2xl border border-base-300 bg-base-100 p-6">
+              <h3 className="font-bold">{title}</h3>
+              <p className="mt-2 text-sm text-base-content/70">{text}</p>
+            </div>
+          ))}
+        </section>
       </div>
-    </>
+    </main>
   );
 };
 
