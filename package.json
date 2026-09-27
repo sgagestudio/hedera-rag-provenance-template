@@ -62,7 +62,8 @@
     "next:vercel:yolo": "yarn workspace @sh/nextjs vercel:yolo",
     "postinstall": "husky",
     "precommit": "lint-staged",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "next:provenance:create-topic": "yarn workspace @sh/nextjs provenance:create-topic"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
