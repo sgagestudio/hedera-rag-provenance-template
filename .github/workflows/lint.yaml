@@ -34,9 +34,21 @@ jobs:
 
       - name: Run Hardhat node and deploy contracts
         run: |
-          yarn hardhat:chain &
-          timeout 60s bash -c 'until curl -s -X POST http://127.0.0.1:8545 -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"web3_clientVersion\",\"params\":[],\"id\":1}" >/dev/null; do sleep 2; done'
-          yarn hardhat:deploy --network localhost
+          for attempt in 1 2 3; do
+            yarn hardhat:chain &
+            chain_pid=$!
+            if timeout 75s bash -c 'until curl -fsS -X POST http://127.0.0.1:8545 -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"web3_clientVersion\",\"params\":[],\"id\":1}" >/dev/null; do sleep 2; done' \
+              && yarn hardhat:deploy --network localhost; then
+              break
+            fi
+            kill "$chain_pid" 2>/dev/null || true
+            wait "$chain_pid" 2>/dev/null || true
+            if [ "$attempt" -eq 3 ]; then
+              echo "Hedera fork/deploy failed after 3 attempts"
+              exit 1
+            fi
+            sleep $((attempt * 5))
+          done
 
       - name: Run nextjs lint
         run: yarn next:lint --max-warnings=0
