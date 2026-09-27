@@ -47,17 +47,14 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    hardhat:
-      process.env.HEDERA_FORKING === "true"
-        ? {
-            forking: {
-              url: hederaRpcUrl,
-              // @ts-expect-error - custom property for hedera-forking plugin
-              chainId: 296,
-              workerPort: 10001,
-            },
-          }
-        : {},
+    hardhat: {
+      forking: {
+        url: hederaRpcUrl,
+        // @ts-expect-error - custom property for hedera-forking plugin
+        chainId: 296,
+        workerPort: 10001,
+      },
+    },
     hederaTestnet: {
       url: "https://testnet.hashio.io/api",
       accounts: [deployerPrivateKey],
