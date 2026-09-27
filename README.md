@@ -120,7 +120,17 @@ Deploy it after the HCS topic exists:
 HEDERA_TOPIC_ID=0.0.x yarn hardhat:deploy --network hederaTestnet
 ```
 
-### 6. Run the app
+### 6. Produce a public testnet proof
+
+After Kubo is running and `HEDERA_OPERATOR_ID` / `HEDERA_OPERATOR_KEY` are present in `packages/nextjs/.env.local`:
+
+```bash
+yarn next:provenance:testnet-proof
+```
+
+The command creates a restricted HCS topic, pins deterministic public evidence to IPFS, submits its CID + SHA-256 attestation to Hedera testnet, waits for Mirror Node confirmation, and writes only public verification data to `proofs/testnet-proof.json`. It never writes or prints the operator private key.
+
+### 7. Run the app
 
 With Kubo running, execute:
 
@@ -186,7 +196,7 @@ yarn next:check-types
 yarn next:build
 ```
 
-Before bounty submission we will also run the Scaffold-HBAR clean-scaffold self-check and publish a real Hedera testnet transaction/HashScan link.
+The repository also runs an External Template Gate that scaffolds the project through the public `create-scaffold-hbar` custom-template path. Before bounty submission, `proofs/testnet-proof.json` must contain the real HashScan and Mirror Node evidence produced by the command above.
 
 ## License
 
