@@ -19,6 +19,11 @@ jobs:
           corepack prepare yarn@3.2.3 --activate
           yarn --version
 
+      - name: Configure ephemeral Git identity
+        run: |
+          git config --global user.name "CI Validator"
+          git config --global user.email "ci-validator@users.noreply.github.com"
+
       - name: Scaffold from public repository
         run: |
           npx --yes create-scaffold-hbar@latest /tmp/rag-provenance-generated \
