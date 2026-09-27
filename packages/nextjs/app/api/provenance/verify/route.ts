@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import { verifyEvidence } from "~~/lib/provenance";
 
 export const runtime = "nodejs";
