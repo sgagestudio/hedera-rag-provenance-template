@@ -32,11 +32,13 @@ jobs:
             --solidity-framework hardhat \
             --network testnet \
             --skip-hedera-skills \
+            --skip-install \
             --ci
 
       - name: Validate generated project
         working-directory: /tmp/rag-provenance-generated
         run: |
+          yarn install
           yarn hardhat:compile
           yarn next:lint --max-warnings=0
           yarn next:check-types
