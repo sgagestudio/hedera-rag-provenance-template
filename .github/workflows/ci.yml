@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.18.3"
+          cache: yarn
+
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn hardhat:compile
+      - run: yarn hardhat:test
+      - run: yarn next:check-types
+      - run: yarn next:build
