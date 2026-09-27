@@ -1,0 +1,43 @@
+name: Regenerate Hardhat Lockfile
+
+on:
+  push:
+    branches:
+      - staging/hardhat-lock-ci
+
+permissions:
+  contents: write
+
+jobs:
+  lockfile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: staging/hardhat-lock-ci
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.18.3"
+
+      - run: corepack enable
+      - name: Regenerate lockfile for declared workspaces
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+        run: yarn install
+
+      - name: Commit regenerated lockfile
+        run: |
+          if git diff --quiet -- yarn.lock; then
+            echo "Lockfile already aligned"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add yarn.lock
+          git commit -m "Regenerate lockfile for Hardhat-only template"
+          git push origin HEAD:staging/hardhat-lock-ci
