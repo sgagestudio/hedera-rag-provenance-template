@@ -14,7 +14,8 @@
     "vercel:yolo": "vercel --build-env YARN_ENABLE_IMMUTABLE_INSTALLS=false --build-env ENABLE_EXPERIMENTAL_COREPACK=1 --build-env NEXT_PUBLIC_IGNORE_BUILD_ERROR=true --build-env VERCEL_TELEMETRY_DISABLED=1",
     "ipfs": "NEXT_PUBLIC_IPFS_BUILD=true yarn build && yarn bgipfs upload config init -u https://upload.bgipfs.com && CID=$(yarn bgipfs upload out | grep -o 'CID: [^ ]*' | cut -d' ' -f2) && [ ! -z \"$CID\" ] && echo '🚀 Upload complete! Your site is now available at: https://community.bgipfs.com/ipfs/'$CID || echo '❌ Upload failed'",
     "vercel:login": "vercel login",
-    "provenance:create-topic": "node --env-file=.env.local scripts/create-topic.mjs"
+    "provenance:create-topic": "node --env-file=.env.local scripts/create-topic.mjs",
+    "provenance:testnet-proof": "node --env-file=.env.local scripts/create-testnet-proof.mjs --write-proof"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",
