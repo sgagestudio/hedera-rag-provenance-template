@@ -13,11 +13,14 @@ if (!operatorId || !operatorKey) {
 }
 
 const client = Client.forTestnet();
-client.setOperator(AccountId.fromString(operatorId), PrivateKey.fromString(operatorKey));
+const operatorPrivateKey = PrivateKey.fromString(operatorKey);
+client.setOperator(AccountId.fromString(operatorId), operatorPrivateKey);
 
 try {
   const tx = await new TopicCreateTransaction()
     .setTopicMemo("Scaffold-HBAR RAG provenance v1")
+    .setAdminKey(operatorPrivateKey.publicKey)
+    .setSubmitKey(operatorPrivateKey.publicKey)
     .execute(client);
   const receipt = await tx.getReceipt(client);
 
