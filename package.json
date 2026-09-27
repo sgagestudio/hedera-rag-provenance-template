@@ -45,7 +45,8 @@
     "lint-staged": "lint-staged",
     "next:provenance:create-topic": "yarn workspace @sh/nextjs provenance:create-topic",
     "ipfs:up": "docker compose -f docker-compose.ipfs.yml up -d",
-    "ipfs:down": "docker compose -f docker-compose.ipfs.yml down"
+    "ipfs:down": "docker compose -f docker-compose.ipfs.yml down",
+    "next:provenance:testnet-proof": "yarn workspace @sh/nextjs provenance:testnet-proof"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
