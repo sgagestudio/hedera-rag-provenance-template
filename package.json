@@ -46,7 +46,8 @@
     "next:provenance:create-topic": "yarn workspace @sh/nextjs provenance:create-topic",
     "ipfs:up": "docker compose -f docker-compose.ipfs.yml up -d",
     "ipfs:down": "docker compose -f docker-compose.ipfs.yml down",
-    "next:provenance:testnet-proof": "yarn workspace @sh/nextjs provenance:testnet-proof"
+    "next:provenance:testnet-proof": "yarn workspace @sh/nextjs provenance:testnet-proof",
+    "next:test:provenance": "yarn workspace @sh/nextjs test:provenance"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
@@ -55,5 +56,10 @@
   },
   "engines": {
     "node": ">=20.18.3"
+  },
+  "resolutions": {
+    "picomatch@npm:2.3.1": "npm:2.3.2",
+    "picomatch@npm:4.0.3": "npm:4.0.4",
+    "yaml@npm:2.8.2": "npm:2.8.3"
   }
 }
