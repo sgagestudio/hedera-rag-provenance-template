@@ -5,6 +5,8 @@ import { assertWriteAuthorized, withWriteCapacity } from "~~/lib/provenance/secu
 
 export const runtime = "nodejs";
 
+const MAX_MULTIPART_OVERHEAD_BYTES = 1024 * 1024;
+
 function formText(formData: FormData, name: string): string | null {
   const value = formData.get(name);
   return typeof value === "string" ? value : null;
@@ -13,6 +15,17 @@ function formText(formData: FormData, name: string): string | null {
 export async function POST(request: Request) {
   try {
     assertWriteAuthorized(request);
+
+    const contentLength = Number(request.headers.get("content-length"));
+    if (
+      Number.isFinite(contentLength) &&
+      contentLength > MAX_EVIDENCE_BYTES + MAX_MULTIPART_OVERHEAD_BYTES
+    ) {
+      return NextResponse.json(
+        { error: "request body exceeds the provenance upload limit", code: "INVALID_INPUT" },
+        { status: 413 },
+      );
+    }
 
     const formData = await request.formData();
     const file = formData.get("file");
