@@ -3,9 +3,10 @@ import { ValidationError } from "./errors";
 
 export const PROVENANCE_SCHEMA = "rag-provenance-v1";
 export const MAX_EVIDENCE_BYTES = 5 * 1024 * 1024;
-export const MAX_SOURCE_URI_LENGTH = 2048;
-export const MAX_TITLE_LENGTH = 256;
-export const MAX_MIME_TYPE_LENGTH = 127;
+export const MAX_SOURCE_URI_LENGTH = 512;
+export const MAX_TITLE_LENGTH = 128;
+export const MAX_MIME_TYPE_LENGTH = 64;
+export const MAX_HCS_MESSAGE_BYTES = 1024;
 
 export type ProvenanceAttestation = {
   schema: typeof PROVENANCE_SCHEMA;
@@ -44,6 +45,14 @@ export type VerifyEvidenceResult = {
 
 export function sha256Hex(bytes: Uint8Array): string {
   return crypto.createHash("sha256").update(bytes).digest("hex");
+}
+
+export function serializeAttestation(attestation: ProvenanceAttestation): string {
+  const serialized = JSON.stringify(attestation);
+  if (Buffer.byteLength(serialized, "utf8") > MAX_HCS_MESSAGE_BYTES) {
+    throw new ValidationError(`Attestation exceeds the ${MAX_HCS_MESSAGE_BYTES} byte HCS message limit.`);
+  }
+  return serialized;
 }
 
 export function assertEvidenceSize(bytes: Uint8Array): void {
