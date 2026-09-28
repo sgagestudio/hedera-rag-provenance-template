@@ -68,7 +68,7 @@ Show the successful verification state, then open the committed proof JSON.
 
 “Verification does not trust application state. It retrieves the bytes from IPFS, recomputes SHA-256, and queries Hedera Mirror Node for the matching CID and digest.”
 
-Show HCS topic `0.0.10750034`, sequence `1`, and `SUCCESS`.
+Show HCS topic `0.0.10768245`, sequence `1`, and `SUCCESS`.
 
 ## 2:45–3:15 — Public chain evidence
 
@@ -76,11 +76,11 @@ Show HCS topic `0.0.10750034`, sequence `1`, and `SUCCESS`.
 
 HashScan:
 
-https://hashscan.io/testnet/transaction/0.0.10737175%401790547963.114160473
+https://hashscan.io/testnet/transaction/0.0.10737175%401790638704.703142857
 
 Mirror Node:
 
-https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10750034/messages/1
+https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10768245/messages/1
 
 **Narration:**
 
