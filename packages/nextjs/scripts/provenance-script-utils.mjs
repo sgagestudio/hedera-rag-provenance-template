@@ -1,10 +1,5 @@
+import { AccountId, Client, PrivateKey, TopicCreateTransaction } from "@hiero-ledger/sdk";
 import crypto from "node:crypto";
-import {
-  AccountId,
-  Client,
-  PrivateKey,
-  TopicCreateTransaction,
-} from "@hiero-ledger/sdk";
 
 export class ProvenanceScriptUtils {
   static required(name) {
@@ -62,14 +57,7 @@ export class ProvenanceScriptUtils {
     return sequenceNumber;
   }
 
-  static async waitForMirror({
-    mirrorBase,
-    topicId,
-    sequenceNumber,
-    cid,
-    digest,
-    timeoutMs = 60_000,
-  }) {
+  static async waitForMirror({ mirrorBase, topicId, sequenceNumber, cid, digest, timeoutMs = 60_000 }) {
     const deadline = Date.now() + timeoutMs;
     let delayMs = 1_500;
 

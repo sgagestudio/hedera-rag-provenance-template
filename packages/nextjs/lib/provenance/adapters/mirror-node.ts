@@ -30,10 +30,7 @@ export class HederaMirrorNodeReader implements AttestationReader {
   }
 
   async getBySequence(sequenceNumber: number): Promise<MirrorAttestation | null> {
-    const url = new URL(
-      `/api/v1/topics/${encodeURIComponent(this.topicId)}/messages/${sequenceNumber}`,
-      this.baseUrl,
-    );
+    const url = new URL(`/api/v1/topics/${encodeURIComponent(this.topicId)}/messages/${sequenceNumber}`, this.baseUrl);
     const payload = await this.fetchJson(url, true);
     const message = payload.messages?.[0];
     return message ? this.decodeMessage(message) : null;

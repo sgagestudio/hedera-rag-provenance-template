@@ -1,16 +1,16 @@
 import {
+  type AnchorEvidenceInput,
+  type AnchorEvidenceResult,
   MAX_EVIDENCE_BYTES,
   PROVENANCE_SCHEMA,
+  type ProvenanceAttestation,
+  type VerifyEvidenceResult,
   assertEvidenceSize,
   canonicalizeCid,
   normalizeMimeType,
   normalizeSourceUri,
   normalizeTitle,
   sha256Hex,
-  type AnchorEvidenceInput,
-  type AnchorEvidenceResult,
-  type ProvenanceAttestation,
-  type VerifyEvidenceResult,
 } from "./domain";
 import { ConfigurationError, UpstreamError, ValidationError } from "./errors";
 import type { AttestationPublisher, AttestationReader, EvidenceStore, MirrorAttestation } from "./ports";

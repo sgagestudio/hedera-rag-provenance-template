@@ -1,5 +1,5 @@
-import crypto from "node:crypto";
 import { ValidationError } from "./errors";
+import crypto from "node:crypto";
 
 export const PROVENANCE_SCHEMA = "rag-provenance-v1";
 export const MAX_EVIDENCE_BYTES = 5 * 1024 * 1024;

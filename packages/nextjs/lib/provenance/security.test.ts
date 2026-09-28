@@ -1,7 +1,7 @@
+import { AuthenticationError, ConfigurationError } from "./errors";
+import { assertWriteAuthorized } from "./security";
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertWriteAuthorized } from "./security";
-import { AuthenticationError, ConfigurationError } from "./errors";
 
 test("configured write API key is compared before allowing a costly write", () => {
   const previous = process.env.PROVENANCE_WRITE_API_KEY;

@@ -124,7 +124,8 @@ const Home: NextPage = () => {
                 onChange={event => setWriteApiKey(event.target.value)}
               />
               <span className="mt-2 text-xs text-base-content/60">
-                Kept only in current browser-tab memory and sent as a Bearer token. Local development can leave it blank.
+                Kept only in current browser-tab memory and sent as a Bearer token. Local development can leave it
+                blank.
               </span>
             </label>
 

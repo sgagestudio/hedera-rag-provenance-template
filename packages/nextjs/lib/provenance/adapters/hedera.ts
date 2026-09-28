@@ -1,7 +1,7 @@
-import { AccountId, Client, PrivateKey, TopicId, TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
+import { type ProvenanceAttestation, serializeAttestation } from "../domain";
 import { ConfigurationError, UpstreamError } from "../errors";
 import type { AttestationPublisher, PublishedAttestation } from "../ports";
-import { serializeAttestation, type ProvenanceAttestation } from "../domain";
+import { AccountId, Client, PrivateKey, TopicId, TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
 
 export class HederaHcsPublisher implements AttestationPublisher {
   constructor(

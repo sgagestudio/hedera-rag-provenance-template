@@ -17,10 +17,7 @@ export async function POST(request: Request) {
     assertWriteAuthorized(request);
 
     const contentLength = Number(request.headers.get("content-length"));
-    if (
-      Number.isFinite(contentLength) &&
-      contentLength > MAX_EVIDENCE_BYTES + MAX_MULTIPART_OVERHEAD_BYTES
-    ) {
+    if (Number.isFinite(contentLength) && contentLength > MAX_EVIDENCE_BYTES + MAX_MULTIPART_OVERHEAD_BYTES) {
       return NextResponse.json(
         { error: "request body exceeds the provenance upload limit", code: "INVALID_INPUT" },
         { status: 413 },

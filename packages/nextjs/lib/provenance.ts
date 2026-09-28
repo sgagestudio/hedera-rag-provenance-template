@@ -1,9 +1,9 @@
-import { KuboEvidenceStore } from "./provenance/adapters/ipfs";
 import { HederaHcsPublisher } from "./provenance/adapters/hedera";
+import { KuboEvidenceStore } from "./provenance/adapters/ipfs";
 import { HederaMirrorNodeReader } from "./provenance/adapters/mirror-node";
 import { loadReadConfig, loadWriteConfig } from "./provenance/config";
-import { ProvenanceService } from "./provenance/service";
 import type { AnchorEvidenceInput, AnchorEvidenceResult, VerifyEvidenceResult } from "./provenance/domain";
+import { ProvenanceService } from "./provenance/service";
 
 export {
   MAX_EVIDENCE_BYTES,
@@ -28,12 +28,7 @@ export async function anchorEvidence(input: AnchorEvidenceInput): Promise<Anchor
 
 export async function verifyEvidence(cid: string, sequenceNumber?: number | null): Promise<VerifyEvidenceResult> {
   const config = loadReadConfig();
-  const store = new KuboEvidenceStore(
-    null,
-    config.gatewayBaseUrl,
-    20_000,
-    config.gatewayTimeoutMs,
-  );
+  const store = new KuboEvidenceStore(null, config.gatewayBaseUrl, 20_000, config.gatewayTimeoutMs);
   const reader = new HederaMirrorNodeReader(
     config.mirrorBaseUrl,
     config.mirrorTimeoutMs,

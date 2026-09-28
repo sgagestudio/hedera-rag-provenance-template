@@ -1,9 +1,8 @@
-import { writeFile } from "node:fs/promises";
-import path from "node:path";
-
+import { ProvenanceScriptUtils } from "./provenance-script-utils.mjs";
 import { TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
 import { create as createIpfsClient } from "kubo-rpc-client";
-import { ProvenanceScriptUtils } from "./provenance-script-utils.mjs";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
 
 const SCHEMA = "rag-provenance-v1";
 const mirrorBase = ProvenanceScriptUtils.parseHttpBase(

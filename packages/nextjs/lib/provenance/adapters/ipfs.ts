@@ -1,7 +1,7 @@
-import { create as createIpfsClient } from "kubo-rpc-client";
 import { readResponseBytesLimited, withAbortTimeout } from "../async-utils";
 import { ConfigurationError, UpstreamError } from "../errors";
 import type { EvidenceStore } from "../ports";
+import { create as createIpfsClient } from "kubo-rpc-client";
 
 export class KuboEvidenceStore implements EvidenceStore {
   constructor(

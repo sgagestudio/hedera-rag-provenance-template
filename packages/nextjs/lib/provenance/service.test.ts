@@ -1,17 +1,8 @@
+import { PROVENANCE_SCHEMA, type ProvenanceAttestation, sha256Hex } from "./domain";
+import type { AttestationPublisher, AttestationReader, EvidenceStore, MirrorAttestation } from "./ports";
+import { ProvenanceService } from "./service";
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  PROVENANCE_SCHEMA,
-  sha256Hex,
-  type ProvenanceAttestation,
-} from "./domain";
-import type {
-  AttestationPublisher,
-  AttestationReader,
-  EvidenceStore,
-  MirrorAttestation,
-} from "./ports";
-import { ProvenanceService } from "./service";
 
 const CID = "QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS";
 const TOPIC = "0.0.123";

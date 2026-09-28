@@ -1,5 +1,3 @@
-import assert from "node:assert/strict";
-import test from "node:test";
 import {
   MAX_HCS_MESSAGE_BYTES,
   MAX_MIME_TYPE_LENGTH,
@@ -13,6 +11,8 @@ import {
   serializeAttestation,
 } from "./domain";
 import { ValidationError } from "./errors";
+import assert from "node:assert/strict";
+import test from "node:test";
 
 const CID = "QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS";
 
