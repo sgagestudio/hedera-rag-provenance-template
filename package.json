@@ -41,19 +41,25 @@
     "next:vercel:login": "yarn workspace @sh/nextjs vercel:login",
     "next:vercel:yolo": "yarn workspace @sh/nextjs vercel:yolo",
     "postinstall": "husky",
-    "precommit": "lint-staged",
-    "lint-staged": "lint-staged",
     "next:provenance:create-topic": "yarn workspace @sh/nextjs provenance:create-topic",
     "ipfs:up": "docker compose -f docker-compose.ipfs.yml up -d",
     "ipfs:down": "docker compose -f docker-compose.ipfs.yml down",
-    "next:provenance:testnet-proof": "yarn workspace @sh/nextjs provenance:testnet-proof"
+    "next:provenance:testnet-proof": "yarn workspace @sh/nextjs provenance:testnet-proof",
+    "next:test:provenance": "yarn workspace @sh/nextjs test:provenance"
   },
   "packageManager": "yarn@3.2.3",
   "devDependencies": {
-    "husky": "^9.1.6",
-    "lint-staged": "^15.2.10"
+    "husky": "^9.1.6"
   },
   "engines": {
     "node": ">=20.18.3"
+  },
+  "resolutions": {
+    "@rollup/pluginutils/picomatch": "4.0.4",
+    "@vercel/nft/picomatch": "4.0.4",
+    "tinyglobby/picomatch": "4.0.4",
+    "anymatch/picomatch": "2.3.2",
+    "micromatch/picomatch": "2.3.2",
+    "readdirp/picomatch": "2.3.2"
   }
 }
