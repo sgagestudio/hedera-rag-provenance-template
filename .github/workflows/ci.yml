@@ -22,6 +22,9 @@ jobs:
       - run: corepack enable
       - run: yarn install --immutable
       - run: yarn hardhat:compile
+      - run: yarn next:test
+      - name: Audit dependencies
+        run: yarn npm audit --recursive --severity moderate
       - name: Run Hedera-backed Hardhat tests
         run: |
           for attempt in 1 2 3; do
