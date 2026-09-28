@@ -9,6 +9,26 @@ function tokenDigest(value: string): Buffer {
 }
 
 export function requireWriteAuthorization(request: Request): void {
+  const origin = request.headers.get("origin");
+  if (origin) {
+    let originUrl: URL;
+    try {
+      originUrl = new URL(origin);
+    } catch {
+      throw new ProvenanceError("CROSS_ORIGIN", "Cross-origin writes are not allowed.", {
+        status: 403,
+        expose: true,
+      });
+    }
+
+    if (originUrl.origin !== new URL(request.url).origin) {
+      throw new ProvenanceError("CROSS_ORIGIN", "Cross-origin writes are not allowed.", {
+        status: 403,
+        expose: true,
+      });
+    }
+  }
+
   const expected = process.env.PROVENANCE_WRITE_TOKEN?.trim();
 
   if (!expected) {

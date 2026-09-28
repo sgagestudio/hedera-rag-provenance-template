@@ -23,10 +23,16 @@ export function provenanceErrorResponse(error: unknown, context: string, fallbac
       },
       {
         status: error.status,
-        headers: error.code === "UNAUTHORIZED" ? { "WWW-Authenticate": "Bearer" } : undefined,
+        headers: {
+          "Cache-Control": "no-store",
+          ...(error.code === "UNAUTHORIZED" ? { "WWW-Authenticate": "Bearer" } : {}),
+        },
       },
     );
   }
 
-  return NextResponse.json({ error: fallbackMessage, code: "INTERNAL_ERROR" }, { status: 500 });
+  return NextResponse.json(
+    { error: fallbackMessage, code: "INTERNAL_ERROR" },
+    { status: 500, headers: { "Cache-Control": "no-store" } },
+  );
 }

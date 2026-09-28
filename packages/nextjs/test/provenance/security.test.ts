@@ -18,9 +18,29 @@ function withEnvironment(values: Record<string, string | undefined>, run: () => 
   }
 }
 
-test("local development can run without a write token", () => {
+test("local development can run without a write token for same-origin requests", () => {
   withEnvironment({ NODE_ENV: "development", PROVENANCE_WRITE_TOKEN: undefined }, () => {
-    assert.doesNotThrow(() => requireWriteAuthorization(new Request("http://localhost/api")));
+    assert.doesNotThrow(() =>
+      requireWriteAuthorization(
+        new Request("http://localhost/api", {
+          headers: { Origin: "http://localhost" },
+        }),
+      ),
+    );
+  });
+});
+
+test("cross-origin browser writes are rejected even in local development", () => {
+  withEnvironment({ NODE_ENV: "development", PROVENANCE_WRITE_TOKEN: undefined }, () => {
+    assert.throws(
+      () =>
+        requireWriteAuthorization(
+          new Request("http://localhost/api", {
+            headers: { Origin: "https://evil.example" },
+          }),
+        ),
+      /Cross-origin writes are not allowed/i,
+    );
   });
 });
 
