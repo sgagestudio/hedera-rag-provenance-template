@@ -1,24 +1,23 @@
 import { create as createIpfsClient } from "kubo-rpc-client";
 import { readResponseBytesLimited, withAbortTimeout } from "../async-utils";
-import { UpstreamError } from "../errors";
+import { ConfigurationError, UpstreamError } from "../errors";
 import type { EvidenceStore } from "../ports";
 
 export class KuboEvidenceStore implements EvidenceStore {
-  private readonly client;
-
   constructor(
-    apiUrl: string,
+    private readonly apiUrl: string | null,
     private readonly gatewayBaseUrl: string,
     private readonly ipfsTimeoutMs: number,
     private readonly gatewayTimeoutMs: number,
-  ) {
-    this.client = createIpfsClient({ url: apiUrl });
-  }
+  ) {}
 
   async add(bytes: Uint8Array): Promise<string> {
+    if (!this.apiUrl) throw new ConfigurationError("IPFS API is not configured for writes.");
+    const client = createIpfsClient({ url: this.apiUrl });
+
     try {
       const added = await withAbortTimeout(this.ipfsTimeoutMs, "IPFS add", signal =>
-        this.client.add(bytes, { pin: true, signal }),
+        client.add(bytes, { pin: true, signal }),
       );
       return added.cid.toString();
     } catch (error) {
