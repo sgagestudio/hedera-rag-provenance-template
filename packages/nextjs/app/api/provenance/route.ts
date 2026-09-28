@@ -30,9 +30,10 @@ export async function POST(request: Request) {
       );
     }
 
+    const bytes = new Uint8Array(await file.arrayBuffer());
     const result = await withWriteCapacity(() =>
       anchorEvidence({
-        bytes: new Uint8Array(file.arrayBuffer ? await file.arrayBuffer() : new ArrayBuffer(0)),
+        bytes,
         sourceUri: formText(formData, "sourceUri"),
         title: formText(formData, "title") || file.name,
         mimeType: file.type || "application/octet-stream",
