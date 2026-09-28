@@ -1,0 +1,5 @@
+{
+  "packages/nextjs/**/*.{js,jsx,ts,tsx,mjs,cjs,json}": "yarn workspace @sh/nextjs prettier --write",
+  "packages/hardhat/**/*.{js,ts,json}": "yarn workspace @sh/hardhat prettier --write",
+  "package.json": "yarn workspace @sh/nextjs prettier --write"
+}

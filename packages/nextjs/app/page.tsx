@@ -9,6 +9,7 @@ type AnchorResult = {
   topicId: string;
   transactionId: string;
   status: string;
+  sequenceNumber: number;
 };
 
 type VerifyResult = {
@@ -23,6 +24,7 @@ type VerifyResult = {
 const Home: NextPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const [sourceUri, setSourceUri] = useState("");
+  const [writeApiKey, setWriteApiKey] = useState("");
   const [result, setResult] = useState<AnchorResult | null>(null);
   const [verification, setVerification] = useState<VerifyResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,7 +44,8 @@ const Home: NextPage = () => {
       body.set("title", file.name);
       if (sourceUri.trim()) body.set("sourceUri", sourceUri.trim());
 
-      const response = await fetch("/api/provenance", { method: "POST", body });
+      const headers = writeApiKey ? { Authorization: `Bearer ${writeApiKey}` } : undefined;
+      const response = await fetch("/api/provenance", { method: "POST", body, headers });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Unable to anchor evidence");
 
@@ -60,7 +63,11 @@ const Home: NextPage = () => {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`/api/provenance/verify?cid=${encodeURIComponent(result.cid)}`);
+      const params = new URLSearchParams({
+        cid: result.cid,
+        sequenceNumber: String(result.sequenceNumber),
+      });
+      const response = await fetch(`/api/provenance/verify?${params.toString()}`);
       const payload = await response.json();
       if (!response.ok && response.status !== 404) throw new Error(payload.error || "Unable to verify evidence");
       setVerification(payload as VerifyResult);
@@ -106,6 +113,22 @@ const Home: NextPage = () => {
               />
             </label>
 
+            <label className="form-control w-full">
+              <span className="label-text mb-2 font-semibold">Write API key</span>
+              <input
+                type="password"
+                autoComplete="off"
+                className="input input-bordered w-full"
+                placeholder="Required for production writes"
+                value={writeApiKey}
+                onChange={event => setWriteApiKey(event.target.value)}
+              />
+              <span className="mt-2 text-xs text-base-content/60">
+                Kept only in current browser-tab memory and sent as a Bearer token. Local development can leave it
+                blank.
+              </span>
+            </label>
+
             <button className="btn btn-primary" disabled={!file || busy}>
               {busy ? "Working…" : "Anchor provenance"}
             </button>
@@ -133,6 +156,10 @@ const Home: NextPage = () => {
               <div>
                 <dt className="font-semibold">Transaction</dt>
                 <dd className="break-all font-mono">{result.transactionId}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">HCS sequence</dt>
+                <dd className="font-mono">#{result.sequenceNumber}</dd>
               </div>
             </dl>
 

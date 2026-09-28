@@ -39,7 +39,21 @@ evidence bytes
 IPFS gateway --> re-hash bytes --> match HCS attestation --> VERIFIED
 ```
 
-## Bounty gate
+## Architecture and performance
+
+The server-side provenance path is split into small layers:
+
+- **domain** — hashes, CID/metadata validation, the attestation schema and the 1 KiB HCS payload budget;
+- **application service** — coordinates anchor/verify use cases;
+- **ports** — interfaces for evidence storage, HCS publication and attestation reads;
+- **adapters** — Kubo/IPFS, Hedera HCS and Mirror Node implementations;
+- **HTTP/security** — authentication, bounded concurrency and safe error mapping.
+
+There is deliberately **no database** in the verification source of truth. Evidence bytes are addressed by IPFS CID and attestations are immutable HCS messages. A product can add a database/indexer for search or user data, but verification must continue to work from IPFS + HCS independently.
+
+New anchor responses include the HCS `sequenceNumber`. The UI passes it to verification so Mirror Node can use the exact `/messages/{sequenceNumber}` endpoint instead of scanning recent topic messages. Legacy callers that only have a CID use a bounded paginated fallback.
+
+
 
 This repository is intended to satisfy the Scaffold-HBAR external-template gate:
 
@@ -154,12 +168,14 @@ yarn next:dev
 
 Open `http://localhost:3000`.
 
+In production, enter the configured write API key in the password field before anchoring. It stays in browser-tab memory and is sent only as an Authorization bearer token.
+
 Upload an evidence file. The server:
 
 1. computes SHA-256 over the exact bytes;
 2. adds/pins the bytes to IPFS;
 3. submits a `rag-provenance-v1` JSON attestation to HCS;
-4. returns the CID, digest, HCS topic and transaction ID.
+4. returns the CID, digest, HCS topic, transaction ID and HCS sequence number.
 
 Press **Verify from IPFS + Mirror Node** to retrieve the bytes, re-hash them and locate the matching HCS message.
 
@@ -195,8 +211,14 @@ This gives EVM integrations a stable discovery anchor without duplicating every 
 - Treat HCS messages as public.
 - Treat public IPFS content as public. Encrypt sensitive content before storing it.
 - Do not commit Hedera private keys, wallet seeds, `.env` files or storage credentials.
-- The sample upload endpoint enforces a 5 MiB limit; production deployments should also add authentication/rate limiting.
+- The upload endpoint enforces a 5 MiB evidence limit plus an early HTTP body-size check.
+- Production writes require `PROVENANCE_WRITE_API_KEY`; local development may run without it.
+- External IPFS/Mirror requests have timeouts and response-size bounds; Mirror pagination is same-origin and bounded.
+- Concurrent writes are bounded per application instance. Add a distributed rate limiter at the edge for multi-instance/serverless production.
+- HCS metadata is constrained to one 1024-byte message to avoid accidental chunking/cost multiplication.
+- Public Hedera deploys require an explicitly supplied deployer key and never use a known Anvil fallback.
 - Verifiers should trust a topic only after checking the deployed `ProvenancePolicy` or another authenticated configuration source.
+- See `SECURITY.md` for the full threat model and deployment checklist.
 
 ## Validation
 
@@ -206,8 +228,10 @@ CI runs:
 yarn install --immutable
 yarn hardhat:compile
 yarn hardhat:test
+yarn next:test
 yarn next:check-types
 yarn next:build
+yarn npm audit --recursive --severity moderate
 ```
 
 The repository also runs an External Template Gate that scaffolds the project through the public `create-scaffold-hbar` custom-template path. Before bounty submission, `proofs/testnet-proof.json` must contain the real HashScan and Mirror Node evidence produced by the command above.
