@@ -56,13 +56,13 @@ This repository is intended to satisfy the Scaffold-HBAR external-template gate:
 
 A real bounty proof has been produced and committed at `proofs/testnet-proof.json`.
 
-- HCS topic: `0.0.10750034`
+- HCS topic: `0.0.10768245`
 - transaction status: `SUCCESS`
 - HCS sequence: `1`
 - CID: `QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS`
 - SHA-256: `704d43948304f88adfe78a98f7f4f2b139a72062562aa20352f5588c387e3cc4`
-- HashScan: https://hashscan.io/testnet/transaction/0.0.10737175%401790547963.114160473
-- Mirror Node: https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10750034/messages/1
+- HashScan: https://hashscan.io/testnet/transaction/0.0.10737175%401790638704.703142857
+- Mirror Node: https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10768245/messages/1
 
 The committed proof contains only public verification data. Operator credentials remain outside the repository.
 
@@ -208,7 +208,7 @@ This gives EVM integrations a stable discovery anchor without duplicating every 
 - Treat HCS messages as public.
 - Treat public IPFS content as public. Encrypt sensitive content before storing it.
 - Do not commit Hedera private keys, wallet seeds, `.env` files or storage credentials.
-- The upload endpoint enforces a 5 MiB evidence limit, metadata bounds, local backpressure, and production write authentication. Horizontally scaled production deployments should also add distributed rate limiting at the ingress/API gateway.
+- The upload endpoint enforces a 5 MiB evidence limit, metadata bounds, same-origin browser writes, local backpressure, and production write authentication. Horizontally scaled production deployments should also add distributed rate limiting at the ingress/API gateway.
 - Verifiers should trust a topic only after checking the deployed `ProvenancePolicy` or another authenticated configuration source.
 
 ## Validation
@@ -219,6 +219,7 @@ CI runs:
 yarn install --immutable
 yarn hardhat:compile
 yarn hardhat:test
+yarn next:test:provenance
 yarn next:check-types
 yarn next:build
 ```
