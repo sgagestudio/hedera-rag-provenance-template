@@ -107,9 +107,22 @@ HEDERA_TOPIC_ID=0.0.x
 HEDERA_MIRROR_NODE_URL=https://testnet.mirrornode.hedera.com
 IPFS_API_URL=http://127.0.0.1:5001/api/v0
 IPFS_GATEWAY_URL=http://127.0.0.1:8080
+PROVENANCE_WRITE_TOKEN=choose-a-long-random-server-secret
 ```
 
-Never expose the operator key via a `NEXT_PUBLIC_*` variable.
+Never expose the operator key or write token via a `NEXT_PUBLIC_*` variable.
+
+### Production write protection
+
+The upload/anchor route can create IPFS pins and Hedera transactions. In local development it is usable without extra authentication, but when `NODE_ENV=production` the route is disabled until `PROVENANCE_WRITE_TOKEN` is configured. API callers then send:
+
+```text
+Authorization: Bearer <PROVENANCE_WRITE_TOKEN>
+```
+
+The browser demo is intentionally optimized for local development. For a public production UI, put your normal user/session authentication plus distributed rate limiting in front of the write route instead of exposing a server token to browser JavaScript.
+
+External IPFS/Mirror requests have bounded timeouts and response sizes. Mirror verification follows trusted same-origin pagination rather than searching only the latest page. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
 ### 4. Create the HCS topic
 
@@ -195,7 +208,7 @@ This gives EVM integrations a stable discovery anchor without duplicating every 
 - Treat HCS messages as public.
 - Treat public IPFS content as public. Encrypt sensitive content before storing it.
 - Do not commit Hedera private keys, wallet seeds, `.env` files or storage credentials.
-- The sample upload endpoint enforces a 5 MiB limit; production deployments should also add authentication/rate limiting.
+- The upload endpoint enforces a 5 MiB evidence limit, metadata bounds, local backpressure, and production write authentication. Horizontally scaled production deployments should also add distributed rate limiting at the ingress/API gateway.
 - Verifiers should trust a topic only after checking the deployed `ProvenancePolicy` or another authenticated configuration source.
 
 ## Validation
