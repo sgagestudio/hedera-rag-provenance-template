@@ -90,7 +90,7 @@ export function canonicalizeCid(value: string): string {
   try {
     return CID.parse(normalized).toString();
   } catch (error) {
-    throw new ValidationError("cid is invalid.", { cause: error } as ErrorOptions);
+    throw new ValidationError("cid is invalid.", { cause: error });
   }
 }
 
