@@ -1,8 +1,7 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-
 import { PROVENANCE_SCHEMA } from "../../lib/provenance/domain";
 import { findMirrorAttestation } from "../../lib/provenance/mirror";
+import assert from "node:assert/strict";
+import test from "node:test";
 
 const cid = "QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS";
 const digest = "a".repeat(64);

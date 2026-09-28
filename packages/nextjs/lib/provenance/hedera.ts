@@ -1,8 +1,7 @@
-import { AccountId, Client, PrivateKey, TopicId, TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
-
 import { getProvenanceConfig, requiredEnv } from "./config";
 import { ProvenanceAttestation, serializeAttestation } from "./domain";
 import { configurationError, upstreamError } from "./errors";
+import { AccountId, Client, PrivateKey, TopicId, TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
 
 function createHederaClient(): Client {
   try {

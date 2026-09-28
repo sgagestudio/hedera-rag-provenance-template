@@ -1,9 +1,3 @@
-import { writeFile } from "node:fs/promises";
-import path from "node:path";
-
-import { TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
-import { create as createIpfsClient } from "kubo-rpc-client";
-
 import {
   PROVENANCE_SCHEMA,
   createRestrictedTopic,
@@ -11,11 +5,12 @@ import {
   sha256Hex,
   waitForMirrorMessage,
 } from "./provenance-script-utils.mjs";
+import { TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
+import { create as createIpfsClient } from "kubo-rpc-client";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
 
-const mirrorBase = (process.env.HEDERA_MIRROR_NODE_URL || "https://testnet.mirrornode.hedera.com").replace(
-  /\/$/,
-  "",
-);
+const mirrorBase = (process.env.HEDERA_MIRROR_NODE_URL || "https://testnet.mirrornode.hedera.com").replace(/\/$/, "");
 const ipfsApi = process.env.IPFS_API_URL || "http://127.0.0.1:5001/api/v0";
 
 async function main() {
@@ -37,11 +32,7 @@ async function main() {
     const cid = added.cid.toString();
     const digest = sha256Hex(evidence);
 
-    const topic = await createRestrictedTopic(
-      client,
-      operatorPrivateKey,
-      "Scaffold-HBAR RAG provenance bounty proof",
-    );
+    const topic = await createRestrictedTopic(client, operatorPrivateKey, "Scaffold-HBAR RAG provenance bounty proof");
 
     const attestation = {
       schema: PROVENANCE_SCHEMA,

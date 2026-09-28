@@ -1,7 +1,6 @@
+import { readBytesWithLimit, trustedNextUrl } from "../../lib/provenance/network";
 import assert from "node:assert/strict";
 import test from "node:test";
-
-import { readBytesWithLimit, trustedNextUrl } from "../../lib/provenance/network";
 
 test("readBytesWithLimit rejects a streamed response that exceeds the cap", async () => {
   const response = new Response(Buffer.from("123456"));

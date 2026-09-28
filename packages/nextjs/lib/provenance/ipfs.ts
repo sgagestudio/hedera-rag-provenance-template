@@ -1,9 +1,8 @@
-import { create as createIpfsClient } from "kubo-rpc-client";
-
 import { getProvenanceConfig } from "./config";
 import { MAX_EVIDENCE_BYTES } from "./domain";
 import { upstreamError } from "./errors";
 import { fetchWithTimeout, readBytesWithLimit } from "./network";
+import { create as createIpfsClient } from "kubo-rpc-client";
 
 export async function addEvidenceToIpfs(bytes: Uint8Array): Promise<string> {
   const config = getProvenanceConfig();

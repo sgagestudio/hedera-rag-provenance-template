@@ -1,15 +1,11 @@
+import { createProvenanceService } from "./application";
 import { getProvenanceConfig } from "./config";
 import { submitAttestationToHedera } from "./hedera";
 import { addEvidenceToIpfs, fetchEvidenceFromIpfs } from "./ipfs";
 import { findMirrorAttestation } from "./mirror";
-import { createProvenanceService } from "./application";
 
 export { createProvenanceService } from "./application";
-export type {
-  AnchorResult,
-  ProvenanceDependencies,
-  VerifyResult,
-} from "./application";
+export type { AnchorResult, ProvenanceDependencies, VerifyResult } from "./application";
 
 const service = createProvenanceService({
   addEvidence: addEvidenceToIpfs,

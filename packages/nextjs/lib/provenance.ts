@@ -19,8 +19,4 @@ export {
 } from "./provenance/domain";
 export type { AnchorInput, ProvenanceAttestation } from "./provenance/domain";
 export { anchorEvidence, createProvenanceService, verifyEvidence } from "./provenance/service";
-export type {
-  AnchorResult,
-  ProvenanceDependencies,
-  VerifyResult,
-} from "./provenance/service";
+export type { AnchorResult, ProvenanceDependencies, VerifyResult } from "./provenance/service";

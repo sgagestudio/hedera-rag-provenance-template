@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import { ProvenanceError } from "./errors";
 
 function safeServerLog(context: string, error: unknown): void {

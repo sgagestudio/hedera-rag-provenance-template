@@ -1,7 +1,6 @@
-import crypto from "node:crypto";
-
 import { getProvenanceConfig } from "./config";
 import { ProvenanceError } from "./errors";
+import crypto from "node:crypto";
 
 let inFlightAnchors = 0;
 
@@ -14,11 +13,10 @@ export function requireWriteAuthorization(request: Request): void {
 
   if (!expected) {
     if (process.env.NODE_ENV === "production") {
-      throw new ProvenanceError(
-        "WRITE_DISABLED",
-        "Anchoring is disabled until PROVENANCE_WRITE_TOKEN is configured.",
-        { status: 503, expose: true },
-      );
+      throw new ProvenanceError("WRITE_DISABLED", "Anchoring is disabled until PROVENANCE_WRITE_TOKEN is configured.", {
+        status: 503,
+        expose: true,
+      });
     }
     return;
   }

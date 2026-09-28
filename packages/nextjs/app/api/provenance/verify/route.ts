@@ -15,9 +15,7 @@ export async function GET(request: Request) {
     return NextResponse.json(result, {
       status: result.verified ? 200 : 404,
       headers: {
-        "Cache-Control": result.verified
-          ? "public, max-age=60, stale-while-revalidate=300"
-          : "no-store",
+        "Cache-Control": result.verified ? "public, max-age=60, stale-while-revalidate=300" : "no-store",
       },
     });
   } catch (error) {

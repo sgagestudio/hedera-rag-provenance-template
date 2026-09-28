@@ -1,11 +1,5 @@
+import { AccountId, Client, PrivateKey, TopicCreateTransaction } from "@hiero-ledger/sdk";
 import crypto from "node:crypto";
-
-import {
-  AccountId,
-  Client,
-  PrivateKey,
-  TopicCreateTransaction,
-} from "@hiero-ledger/sdk";
 
 export const PROVENANCE_SCHEMA = "rag-provenance-v1";
 
@@ -56,13 +50,7 @@ async function fetchJsonWithTimeout(url, timeoutMs = 5_000) {
   }
 }
 
-export async function waitForMirrorMessage({
-  mirrorBase,
-  topicId,
-  cid,
-  digest,
-  timeoutMs = 45_000,
-}) {
+export async function waitForMirrorMessage({ mirrorBase, topicId, cid, digest, timeoutMs = 45_000 }) {
   const deadline = Date.now() + timeoutMs;
   const normalizedBase = mirrorBase.replace(/\/$/, "");
 
@@ -75,11 +63,7 @@ export async function waitForMirrorMessage({
       try {
         const decoded = Buffer.from(message.message, "base64").toString("utf8");
         const attestation = JSON.parse(decoded);
-        if (
-          attestation.schema === PROVENANCE_SCHEMA &&
-          attestation.cid === cid &&
-          attestation.sha256 === digest
-        ) {
+        if (attestation.schema === PROVENANCE_SCHEMA && attestation.cid === cid && attestation.sha256 === digest) {
           return {
             sequenceNumber: message.sequence_number,
             consensusTimestamp: message.consensus_timestamp,

@@ -1,7 +1,6 @@
+import { requireWriteAuthorization } from "../../lib/provenance/security";
 import assert from "node:assert/strict";
 import test from "node:test";
-
-import { requireWriteAuthorization } from "../../lib/provenance/security";
 
 function withEnvironment(values: Record<string, string | undefined>, run: () => void) {
   const previous = Object.fromEntries(Object.keys(values).map(key => [key, process.env[key]]));

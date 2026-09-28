@@ -1,6 +1,3 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-
 import {
   MAX_EVIDENCE_BYTES,
   createAttestation,
@@ -9,12 +6,11 @@ import {
   sha256Hex,
   validateEvidenceBytes,
 } from "../../lib/provenance/domain";
+import assert from "node:assert/strict";
+import test from "node:test";
 
 test("sha256Hex is deterministic for exact evidence bytes", () => {
-  assert.equal(
-    sha256Hex(Buffer.from("abc")),
-    "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-  );
+  assert.equal(sha256Hex(Buffer.from("abc")), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
 });
 
 test("evidence byte limits reject empty and oversized content", () => {
@@ -29,7 +25,10 @@ test("source URI only accepts HTTP(S) without embedded credentials", () => {
 });
 
 test("CID validation is bounded and rejects path-like input", () => {
-  assert.equal(normalizeCid("QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS"), "QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS");
+  assert.equal(
+    normalizeCid("QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS"),
+    "QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS",
+  );
   assert.throws(() => normalizeCid("../../etc/passwd"), /CID is invalid/i);
 });
 

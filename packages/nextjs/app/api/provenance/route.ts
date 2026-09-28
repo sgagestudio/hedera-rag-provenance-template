@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  MAX_EVIDENCE_BYTES,
-  MAX_MULTIPART_BODY_BYTES,
-  anchorEvidence,
-} from "~~/lib/provenance";
+import { MAX_EVIDENCE_BYTES, MAX_MULTIPART_BODY_BYTES, anchorEvidence } from "~~/lib/provenance";
 import { provenanceErrorResponse } from "~~/lib/provenance/api";
 import { acquireAnchorSlot, requireWriteAuthorization } from "~~/lib/provenance/security";
 

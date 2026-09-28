@@ -34,8 +34,7 @@ function decodeAttestation(message: MirrorMessage): ProvenanceAttestation | null
 
 export async function findMirrorAttestation(cid: string, digest: string): Promise<MirrorMatch | null> {
   const config = getProvenanceConfig();
-  let url =
-    `${config.mirrorNodeUrl}/api/v1/topics/${encodeURIComponent(config.topicId)}/messages?limit=100&order=desc`;
+  let url = `${config.mirrorNodeUrl}/api/v1/topics/${encodeURIComponent(config.topicId)}/messages?limit=100&order=desc`;
 
   for (let page = 0; page < config.mirrorMaxPages; page += 1) {
     const response = await fetchWithTimeout(url, { cache: "no-store" }, config.externalTimeoutMs);
@@ -63,11 +62,9 @@ export async function findMirrorAttestation(cid: string, digest: string): Promis
     const next = payload.links?.next;
     if (!next) return null;
     if (page === config.mirrorMaxPages - 1) {
-      throw new ProvenanceError(
-        "MIRROR_SCAN_LIMIT",
-        "Mirror Node scan limit reached before the topic history ended.",
-        { status: 503 },
-      );
+      throw new ProvenanceError("MIRROR_SCAN_LIMIT", "Mirror Node scan limit reached before the topic history ended.", {
+        status: 503,
+      });
     }
     url = trustedNextUrl(config.mirrorNodeUrl, next);
   }
