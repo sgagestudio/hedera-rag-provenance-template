@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createAttestation, sha256Hex } from "../../lib/provenance/domain";
-import { createProvenanceService, ProvenanceDependencies } from "../../lib/provenance/service";
+import { createProvenanceService, ProvenanceDependencies } from "../../lib/provenance/application";
 
 const cid = "QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS";
 
