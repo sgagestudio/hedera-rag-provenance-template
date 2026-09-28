@@ -1,7 +1,7 @@
 import { AccountId, Client, PrivateKey, TopicId, TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
 import { ConfigurationError, UpstreamError } from "../errors";
 import type { AttestationPublisher, PublishedAttestation } from "../ports";
-import type { ProvenanceAttestation } from "../domain";
+import { serializeAttestation, type ProvenanceAttestation } from "../domain";
 
 export class HederaHcsPublisher implements AttestationPublisher {
   constructor(
@@ -19,7 +19,7 @@ export class HederaHcsPublisher implements AttestationPublisher {
 
       const response = await new TopicMessageSubmitTransaction()
         .setTopicId(TopicId.fromString(this.topicId))
-        .setMessage(JSON.stringify(attestation))
+        .setMessage(serializeAttestation(attestation))
         .execute(client);
       const receipt = await response.getReceipt(client);
       const sequenceNumber = Number(receipt.topicSequenceNumber.toString());
