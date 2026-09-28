@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import { CID } from "kubo-rpc-client";
 import { ValidationError } from "./errors";
 
 export const PROVENANCE_SCHEMA = "rag-provenance-v1";
@@ -87,11 +86,12 @@ export function canonicalizeCid(value: string): string {
   if (!normalized) throw new ValidationError("cid is required.");
   if (normalized.length > 128) throw new ValidationError("cid is too long.");
 
-  try {
-    return CID.parse(normalized).toString();
-  } catch (error) {
-    throw new ValidationError("cid is invalid.", { cause: error });
+  const cidV0 = /^Qm[1-9A-HJ-NP-Za-km-z]{44}$/;
+  const cidV1Base32 = /^b[a-z2-7]{20,127}$/;
+  if (!cidV0.test(normalized) && !cidV1Base32.test(normalized)) {
+    throw new ValidationError("cid is invalid.");
   }
+  return normalized;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
