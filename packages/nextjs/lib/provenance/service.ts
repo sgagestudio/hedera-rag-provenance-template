@@ -12,7 +12,7 @@ import {
   type ProvenanceAttestation,
   type VerifyEvidenceResult,
 } from "./domain";
-import { ConfigurationError, ValidationError } from "./errors";
+import { ConfigurationError, UpstreamError, ValidationError } from "./errors";
 import type { AttestationPublisher, AttestationReader, EvidenceStore, MirrorAttestation } from "./ports";
 
 export class ProvenanceService {
@@ -44,7 +44,7 @@ export class ProvenanceService {
 
     const published = await this.attestationPublisher.publish(attestation);
     if (published.status !== "SUCCESS") {
-      throw new ConfigurationError("Hedera did not accept the provenance attestation.");
+      throw new UpstreamError("Hedera did not accept the provenance attestation.");
     }
 
     return {
