@@ -15,18 +15,28 @@ RAG Provenance is a reusable Scaffold-HBAR template for proving exactly which so
 ## Public links
 
 - Repository: https://github.com/sgagestudio/hedera-rag-provenance-template
-- HashScan transaction: https://hashscan.io/testnet/transaction/0.0.10737175%401790547963.114160473
-- Mirror Node message: https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10750034/messages/1
+- HashScan transaction: https://hashscan.io/testnet/transaction/0.0.10737175%401790638704.703142857
+- Mirror Node message: https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10768245/messages/1
 - Public proof JSON: https://github.com/sgagestudio/hedera-rag-provenance-template/blob/main/proofs/testnet-proof.json
 
 ## Evidence summary
 
 - Network: Hedera testnet
-- HCS topic: `0.0.10750034`
+- HCS topic: `0.0.10768245`
 - Transaction status: `SUCCESS`
 - HCS sequence: `1`
 - CID: `QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS`
 - SHA-256: `704d43948304f88adfe78a98f7f4f2b139a72062562aa20352f5588c387e3cc4`
+
+## Security hardening validation
+
+The final code was revalidated after the architecture/security review:
+
+- 16/16 provenance unit tests pass;
+- immutable install succeeds;
+- Lint, CI and External Template Gate are green;
+- recursive dependency audit at moderate severity reports no suggestions;
+- a fresh real IPFS + HCS testnet proof returned `SUCCESS` and was confirmed by Mirror Node.
 
 ## Why the integrations are load-bearing
 
