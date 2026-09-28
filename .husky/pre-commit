@@ -1,1 +1,2 @@
-yarn lint-staged --verbose
+yarn next:lint --max-warnings=0
+yarn hardhat:lint --max-warnings=0
