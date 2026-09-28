@@ -52,6 +52,9 @@ export class ProvenanceScriptUtils {
   }
 
   static sequenceNumber(receipt) {
+    if (!receipt.topicSequenceNumber) {
+      throw new Error("Hedera did not return a topic sequence number.");
+    }
     const sequenceNumber = Number(receipt.topicSequenceNumber.toString());
     if (!Number.isSafeInteger(sequenceNumber) || sequenceNumber <= 0) {
       throw new Error("Hedera did not return a valid topic sequence number.");
@@ -104,7 +107,11 @@ export class ProvenanceScriptUtils {
           throw new Error(`Mirror Node returned HTTP ${response.status}.`);
         }
       } catch (error) {
-        if (error?.name !== "AbortError" && Date.now() + delayMs >= deadline) throw error;
+        if (error?.name !== "AbortError") {
+          const message = error instanceof Error ? error.message : String(error);
+          if (message.startsWith("Mirror Node returned HTTP")) throw error;
+          if (Date.now() + delayMs >= deadline) throw error;
+        }
       } finally {
         clearTimeout(timer);
       }
