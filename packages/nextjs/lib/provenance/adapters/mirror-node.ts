@@ -1,4 +1,4 @@
-import { withAbortTimeout } from "../async-utils";
+import { readResponseBytesLimited, withAbortTimeout } from "../async-utils";
 import { parseProvenanceAttestation } from "../domain";
 import { UpstreamError } from "../errors";
 import type { AttestationReader, MirrorAttestation } from "../ports";
@@ -8,6 +8,8 @@ type MirrorMessage = {
   message?: unknown;
   sequence_number?: unknown;
 };
+
+const MAX_MIRROR_RESPONSE_BYTES = 1024 * 1024;
 
 type MirrorResponse = {
   messages?: MirrorMessage[];
@@ -68,7 +70,8 @@ export class HederaMirrorNodeReader implements AttestationReader {
       );
       if (notFoundIsEmpty && response.status === 404) return { messages: [] };
       if (!response.ok) throw new UpstreamError(`Mirror Node returned HTTP ${response.status}.`);
-      return (await response.json()) as MirrorResponse;
+      const bytes = await readResponseBytesLimited(response, MAX_MIRROR_RESPONSE_BYTES, "Mirror Node response");
+      return JSON.parse(new TextDecoder().decode(bytes)) as MirrorResponse;
     } catch (error) {
       if (error instanceof UpstreamError) throw error;
       throw new UpstreamError("Mirror Node request failed.", { cause: error });
