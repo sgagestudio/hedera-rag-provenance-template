@@ -33,5 +33,6 @@ jobs:
             fi
             sleep $((attempt * 5))
           done
+      - run: yarn next:test:provenance
       - run: yarn next:check-types
       - run: yarn next:build
