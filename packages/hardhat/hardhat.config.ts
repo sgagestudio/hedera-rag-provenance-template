@@ -22,9 +22,10 @@ import generateTsAbis from "./scripts/generateTsAbis";
 // Hedera JSON-RPC URL (testnet default). Set HEDERA_RPC_URL in .env for mainnet.
 const hederaRpcUrl = process.env.HEDERA_RPC_URL || "https://testnet.hashio.io/api";
 
-// Deployer key: run `yarn account:generate` or `yarn account:import`, or set __RUNTIME_DEPLOYER_PRIVATE_KEY at runtime.
-const deployerPrivateKey =
-  process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY ?? "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+// Never fall back to a public Anvil development key on Hedera testnet/mainnet.
+// Live deployments require an explicitly injected runtime key.
+const runtimeDeployerPrivateKey = process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY?.trim();
+const liveNetworkAccounts = runtimeDeployerPrivateKey ? [runtimeDeployerPrivateKey] : [];
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -57,12 +58,12 @@ const config: HardhatUserConfig = {
     },
     hederaTestnet: {
       url: "https://testnet.hashio.io/api",
-      accounts: [deployerPrivateKey],
+      accounts: liveNetworkAccounts,
       chainId: 296,
     },
     hederaMainnet: {
       url: "https://mainnet.hashio.io/api",
-      accounts: [deployerPrivateKey],
+      accounts: liveNetworkAccounts,
       chainId: 295,
     },
   },
@@ -85,6 +86,10 @@ const config: HardhatUserConfig = {
 
 // Extend the deploy task to also generate TypeScript ABIs after deployment.
 task("deploy").setAction(async (args, hre, runSuper) => {
+  if (["hederaTestnet", "hederaMainnet"].includes(hre.network.name) && !runtimeDeployerPrivateKey) {
+    throw new Error("Set __RUNTIME_DEPLOYER_PRIVATE_KEY before deploying to a public Hedera network.");
+  }
+
   await runSuper(args);
   await generateTsAbis(hre);
 });
