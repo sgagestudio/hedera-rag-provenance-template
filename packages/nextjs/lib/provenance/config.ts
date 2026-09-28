@@ -12,7 +12,7 @@ function parseHttpUrl(name: string, fallback: string): string {
   try {
     url = new URL(raw);
   } catch (error) {
-    throw new ConfigurationError(`${name} must be an absolute HTTP(S) URL.`, { cause: error } as ErrorOptions);
+    throw new ConfigurationError(`${name} must be an absolute HTTP(S) URL.`, { cause: error });
   }
 
   if (!["http:", "https:"].includes(url.protocol)) {
