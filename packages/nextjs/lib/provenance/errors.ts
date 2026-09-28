@@ -3,6 +3,7 @@ export type ProvenanceErrorCode =
   | "PAYLOAD_TOO_LARGE"
   | "WRITE_DISABLED"
   | "UNAUTHORIZED"
+  | "CROSS_ORIGIN"
   | "BUSY"
   | "CONFIGURATION_ERROR"
   | "UPSTREAM_ERROR"
