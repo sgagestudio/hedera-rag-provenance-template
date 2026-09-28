@@ -1,70 +1,19 @@
-import crypto from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import {
-  AccountId,
-  Client,
-  PrivateKey,
-  TopicCreateTransaction,
-  TopicMessageSubmitTransaction,
-} from "@hiero-ledger/sdk";
+import { TopicMessageSubmitTransaction } from "@hiero-ledger/sdk";
 import { create as createIpfsClient } from "kubo-rpc-client";
+import { ProvenanceScriptUtils } from "./provenance-script-utils.mjs";
 
 const SCHEMA = "rag-provenance-v1";
-const mirrorBase = (process.env.HEDERA_MIRROR_NODE_URL || "https://testnet.mirrornode.hedera.com").replace(/\/$/, "");
-const ipfsApi = process.env.IPFS_API_URL || "http://127.0.0.1:5001/api/v0";
-
-function required(name) {
-  const value = process.env[name]?.trim();
-  if (!value) throw new Error(`Missing required environment variable: ${name}`);
-  return value;
-}
-
-function sha256Hex(bytes) {
-  return crypto.createHash("sha256").update(bytes).digest("hex");
-}
-
-async function waitForMirror(topicId, cid, digest, timeoutMs = 45_000) {
-  const deadline = Date.now() + timeoutMs;
-
-  while (Date.now() < deadline) {
-    const response = await fetch(
-      `${mirrorBase}/api/v1/topics/${encodeURIComponent(topicId)}/messages?limit=25&order=desc`,
-      { cache: "no-store" },
-    );
-
-    if (response.ok) {
-      const payload = await response.json();
-      for (const message of payload.messages ?? []) {
-        try {
-          const decoded = Buffer.from(message.message, "base64").toString("utf8");
-          const attestation = JSON.parse(decoded);
-          if (attestation.schema === SCHEMA && attestation.cid === cid && attestation.sha256 === digest) {
-            return {
-              sequenceNumber: message.sequence_number,
-              consensusTimestamp: message.consensus_timestamp,
-            };
-          }
-        } catch {
-          // Ignore unrelated messages.
-        }
-      }
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 2_000));
-  }
-
-  throw new Error("Mirror Node did not expose the provenance message within 45 seconds.");
-}
+const mirrorBase = ProvenanceScriptUtils.parseHttpBase(
+  "HEDERA_MIRROR_NODE_URL",
+  "https://testnet.mirrornode.hedera.com",
+);
+const ipfsApi = ProvenanceScriptUtils.parseHttpBase("IPFS_API_URL", "http://127.0.0.1:5001/api/v0");
 
 async function main() {
-  const operatorId = AccountId.fromString(required("HEDERA_OPERATOR_ID"));
-  const operatorKey = PrivateKey.fromString(required("HEDERA_OPERATOR_KEY"));
-
-  const client = Client.forTestnet();
-  client.setOperator(operatorId, operatorKey);
-
+  const { client, operatorKey } = ProvenanceScriptUtils.createHederaClient();
   const ipfs = createIpfsClient({ url: ipfsApi });
 
   const evidence = Buffer.from(
@@ -78,18 +27,15 @@ async function main() {
   );
 
   try {
-    const added = await ipfs.add(evidence, { pin: true });
+    const added = await ipfs.add(evidence, { pin: true, signal: AbortSignal.timeout(20_000) });
     const cid = added.cid.toString();
-    const digest = sha256Hex(evidence);
+    const digest = ProvenanceScriptUtils.sha256Hex(evidence);
 
-    const topicResponse = await new TopicCreateTransaction()
-      .setTopicMemo("Scaffold-HBAR RAG provenance bounty proof")
-      .setAdminKey(operatorKey.publicKey)
-      .setSubmitKey(operatorKey.publicKey)
-      .execute(client);
-    const topicReceipt = await topicResponse.getReceipt(client);
-    if (!topicReceipt.topicId) throw new Error("Hedera did not return a topic ID.");
-    const topicId = topicReceipt.topicId.toString();
+    const topic = await ProvenanceScriptUtils.createRestrictedTopic(
+      client,
+      operatorKey,
+      "Scaffold-HBAR RAG provenance bounty proof",
+    );
 
     const attestation = {
       schema: SCHEMA,
@@ -103,18 +49,28 @@ async function main() {
     };
 
     const messageResponse = await new TopicMessageSubmitTransaction()
-      .setTopicId(topicId)
+      .setTopicId(topic.topicId)
       .setMessage(JSON.stringify(attestation))
       .execute(client);
     const messageReceipt = await messageResponse.getReceipt(client);
+    if (messageReceipt.status.toString() !== "SUCCESS") {
+      throw new Error(`Hedera message submission returned ${messageReceipt.status.toString()}.`);
+    }
 
+    const sequenceNumber = ProvenanceScriptUtils.sequenceNumber(messageReceipt);
     const transactionId = messageResponse.transactionId.toString();
-    const mirror = await waitForMirror(topicId, cid, digest);
+    const mirror = await ProvenanceScriptUtils.waitForMirror({
+      mirrorBase,
+      topicId: topic.topicId,
+      sequenceNumber,
+      cid,
+      digest,
+    });
 
     const proof = {
       network: "testnet",
       schema: SCHEMA,
-      topicId,
+      topicId: topic.topicId,
       cid,
       sha256: digest,
       transactionId,
@@ -122,7 +78,7 @@ async function main() {
       sequenceNumber: mirror.sequenceNumber,
       consensusTimestamp: mirror.consensusTimestamp,
       hashscanTransactionUrl: `https://hashscan.io/testnet/transaction/${encodeURIComponent(transactionId)}`,
-      mirrorNodeMessageUrl: `${mirrorBase}/api/v1/topics/${encodeURIComponent(topicId)}/messages/${mirror.sequenceNumber}`,
+      mirrorNodeMessageUrl: `${mirrorBase}/api/v1/topics/${encodeURIComponent(topic.topicId)}/messages/${mirror.sequenceNumber}`,
       repository: "https://github.com/sgagestudio/hedera-rag-provenance-template",
     };
 
