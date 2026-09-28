@@ -22,6 +22,9 @@ export class HederaHcsPublisher implements AttestationPublisher {
         .setMessage(serializeAttestation(attestation))
         .execute(client);
       const receipt = await response.getReceipt(client);
+      if (!receipt.topicSequenceNumber) {
+        throw new UpstreamError("Hedera did not return a topic sequence number.");
+      }
       const sequenceNumber = Number(receipt.topicSequenceNumber.toString());
 
       if (!Number.isSafeInteger(sequenceNumber) || sequenceNumber <= 0) {
