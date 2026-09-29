@@ -1,257 +1,117 @@
-# RAG provenance project rules
+# RAG Provenance agent guide
 
-This repository is a Scaffold-HBAR external template for the Hedera template bounty.
+This repository is a **Hardhat-only Scaffold-HBAR external template** for verifiable RAG/source provenance on Hedera.
 
-Core invariant:
-`evidence bytes -> SHA-256 + IPFS CID -> HCS attestation -> independent verification`.
+## Core invariant
 
-Project-specific rules:
-- Keep evidence bytes off-chain. HCS carries compact public metadata only.
-- Never expose `HEDERA_OPERATOR_KEY` or other server credentials to client bundles.
-- Preserve deterministic hashing of the exact stored bytes.
-- Verification must recompute the digest from bytes retrieved by CID and independently read HCS through Mirror Node.
-- Do not replace real HCS integration with mocked data in the runnable template.
-- Keep the template usable after `npm create scaffold-hbar@latest --template sgagestudio/hedera-rag-provenance-template`.
-- Before submission, require clean install, lint/typecheck/build/tests and at least one public testnet transaction.
-- Do not commit `.env`, private keys, wallet seeds, credentials or generated secret material.
+`evidence bytes -> SHA-256 + IPFS CID -> HCS attestation -> independent verification`
 
----
+Any change must preserve these properties:
 
-# Agent instructions
+- Evidence bytes stay off-chain; HCS stores only compact public attestation metadata.
+- The digest is computed from the exact bytes that are stored/retrieved.
+- HCS is real and load-bearing; do not replace it with mocked application state in the runnable template.
+- Verification retrieves evidence by CID, recomputes SHA-256, and independently resolves the HCS attestation through Mirror Node.
+- Fresh anchors should verify through the exact HCS sequence returned in the transaction receipt. CID-only verification may use only the bounded, same-origin pagination fallback.
+- `ProvenancePolicy` is the on-chain discovery/policy anchor for the canonical topic/schema; do not duplicate evidence bodies into contract storage.
+- Never expose or commit `HEDERA_OPERATOR_KEY`, wallet seeds, `.env` files, tokens, or other credentials.
 
-This file is the shared briefing for coding agents in this repository (Cursor, Claude Code, Codex, and any other tool that reads `AGENTS.md`). Claude Code loads it through `CLAUDE.md`.
+## Repository layout
 
-This file provides guidance to coding agents working in this repository.
+- `packages/nextjs/` — Next.js app, API routes, provenance domain/application code and IPFS/Hedera/Mirror adapters.
+- `packages/hardhat/` — Solidity `ProvenancePolicy`, deployment scripts and contract tests.
+- `test/provenance/` — provenance-focused unit tests.
+- `proofs/testnet-proof.json` — public, non-secret testnet verification evidence.
+- `docs/ARCHITECTURE.md` — trust model, bounds and production-safety design.
+- `template.json` — external-template manifest consumed by `create-scaffold-hbar`.
 
-## Project Overview
+This template does **not** include a Foundry package. Do not add or document Foundry commands unless the template is deliberately converted and the manifest/workspaces are updated together.
 
-Scaffold-HBAR (`sh`) is a starter kit for building dApps on Hedera. It comes in **two flavors** based on the Solidity framework:
+## Commands
 
-- **Hardhat flavor**: Uses `packages/hardhat` with hardhat-deploy plugin
-- **Foundry flavor**: Uses `packages/foundry` with Forge scripts
-
-Both flavors share the same frontend package:
-
-- **packages/nextjs**: React frontend (Next.js App Router, not Pages Router, RainbowKit, Wagmi, Viem, TypeScript, Tailwind CSS with DaisyUI)
-
-### Detecting Which Flavor You're Usings
-
-Check which package exists in the repository:
-
-- If `packages/hardhat` exists → **Hardhat flavor** (follow Hardhat instructions)
-- If `packages/foundry` exists → **Foundry flavor** (follow Foundry instructions)
-
-## Common Commands
-
-Use explicit package-prefixed scripts for package-specific work. Keep only truly cross-workspace commands unprefixed.
+Run from the repository root:
 
 ```bash
-# Development workflow (run each in separate terminal)
-yarn hardhat:chain   # Start local Hedera-forked Hardhat node
-yarn hardhat:deploy  # Deploy contracts with Hardhat
-yarn foundry:chain   # Start plain Anvil from the Foundry package
-yarn foundry:deploy  # Deploy contracts with Foundry
-yarn next:start      # Start Next.js frontend at http://localhost:3000
+# install / quality
+yarn install --immutable
+yarn lint
+yarn next:check-types
+yarn next:build
 
-# Code quality
-yarn lint            # Lint all present packages
-yarn format          # Format all present packages
+# provenance tests
+yarn next:test:provenance
 
-# Building
-yarn next:build      # Build frontend
-yarn hardhat:compile # Compile Solidity contracts with Hardhat
-yarn foundry:compile # Compile Solidity contracts with Foundry
+# contracts
+yarn hardhat:compile
+yarn hardhat:test
+yarn hardhat:deploy --network hederaTestnet
 
-# Contract verification
-yarn hardhat:verify:testnet
-yarn foundry:verify:testnet
+# local IPFS + app
+yarn ipfs:up
+yarn next:dev
+yarn ipfs:down
 
-# Account management
-yarn hardhat:account:generate
-yarn hardhat:account:import
-yarn hardhat:account
-yarn foundry:account:generate
-yarn foundry:account:import
-yarn foundry:account
-
-# Deploy to live network
-yarn hardhat:deploy --network <network>   # e.g., hederaTestnet, hederaMainnet
-yarn foundry:deploy --network <network>   # e.g., hedera_testnet, hedera_mainnet
-
-yarn next:vercel:yolo --prod # deploy frontend
+# Hedera provenance helpers
+yarn next:provenance:create-topic
+yarn next:provenance:testnet-proof
 ```
 
-## Architecture
+The public template entry point is:
 
-### Smart Contract Development
-
-#### Hardhat Flavor
-
-- Contracts: `packages/hardhat/contracts/`
-- Deployment scripts: `packages/hardhat/deploy/` (uses hardhat-deploy plugin)
-- Tests: `packages/hardhat/test/`
-- Config: `packages/hardhat/hardhat.config.ts`
-- Deploying specific contract:
-  - If the deploy script has:
-    ```typescript
-    // In packages/hardhat/deploy/01_deploy_my_contract.ts
-    deployMyContract.tags = ["MyContract"];
-    ```
- - `yarn hardhat:deploy --tags MyContract`
-
-#### Foundry Flavor
-
-- Contracts: `packages/foundry/contracts/`
-- Deployment scripts: `packages/foundry/script/` (uses custom deployment strategy)
-  - Example: `packages/foundry/script/Deploy.s.sol` and `packages/foundry/script/DeployYourContract.s.sol`
-- Tests: `packages/foundry/test/`
-- Config: `packages/foundry/foundry.toml`
-- Deploying a specific contract:
- - Create a separate deployment script and run `yarn foundry:deploy --file DeployYourContract.s.sol`
-
-#### Both Flavors
-
-- After `yarn hardhat:deploy` or `yarn foundry:deploy`, ABIs are auto-generated to `packages/nextjs/contracts/deployedContracts.ts`
-
-### Frontend Contract Interaction
-
-**Correct interact hook names (use these):**
-
-- `useScaffoldReadContract` - NOT ~~useScaffoldContractRead~~
-- `useScaffoldWriteContract` - NOT ~~useScaffoldContractWrite~~
-
-Contract data is read from two files in `packages/nextjs/contracts/`:
-
-- `deployedContracts.ts`: Auto-generated from deployments
-- `externalContracts.ts`: Manually added external contracts
-
-#### Reading Contract Data
-
-```typescript
-const { data: totalCounter } = useScaffoldReadContract({
-  contractName: "YourContract",
-  functionName: "userGreetingCounter",
-  args: ["0xd8da6bf26964af9d7eed9e03e53415d37aa96045"],
-});
+```bash
+npm create scaffold-hbar@latest --template sgagestudio/hedera-rag-provenance-template
 ```
 
-#### Writing to Contracts
+Keep that path working after every structural change.
 
-```typescript
-const { writeContractAsync, isPending } = useScaffoldWriteContract({
-  contractName: "YourContract",
-});
+## Change rules
 
-await writeContractAsync({
-  functionName: "setGreeting",
-  args: [newGreeting],
-  value: parseEther("0.01"), // for payable functions
-});
+### Domain/application code
+
+- Keep deterministic validation/hashing in `packages/nextjs/lib/provenance/domain.ts`.
+- Keep orchestration in `application.ts`; inject network-facing dependencies rather than importing them into domain logic.
+- Preserve bounded inputs, metadata and serialized HCS message size.
+
+### External adapters
+
+- IPFS, Hedera and Mirror calls need explicit timeouts/bounds.
+- Mirror pagination must remain restricted to the configured Mirror Node origin.
+- Do not reflect raw provider/configuration exceptions to HTTP clients.
+
+### Write path
+
+- Local development may allow the browser demo without a write token.
+- Production must fail closed when `PROVENANCE_WRITE_TOKEN` is absent.
+- Preserve same-origin browser-write protection and local concurrency backpressure.
+- A public scaled deployment still needs normal user/session auth and distributed rate limiting at ingress.
+
+### Frontend / Scaffold-HBAR
+
+- This uses the Next.js App Router.
+- Use the existing Scaffold-HBAR hooks/components and repository conventions rather than introducing parallel abstractions.
+- Contract ABIs/deployments flow through the existing Hardhat workspace.
+
+## Before finalizing a change
+
+For ordinary code changes, run the relevant subset and expand to the full gate when structure/integration changes:
+
+```bash
+yarn lint
+yarn hardhat:compile
+yarn hardhat:test
+yarn next:test:provenance
+yarn next:check-types
+yarn next:build
 ```
 
-#### Reading Events
+For template/manifest/workspace changes, also validate a fresh external scaffold through the same `npm create scaffold-hbar@latest --template owner/repo` path used by CI.
 
-```typescript
-const { data: events, isLoading } = useScaffoldEventHistory({
-  contractName: "YourContract",
-  eventName: "GreetingChange",
-  watch: true,
-  fromBlock: 31231n,
-  blockData: true,
-});
-```
+## Bounty-specific acceptance checklist
 
-Scaffold-HBAR also provides other hooks to interact with blockchain data: `useScaffoldWatchContractEvent`, `useScaffoldEventHistory`, `useDeployedContractInfo`, `useScaffoldContract`, `useTransactor`.
-
-**IMPORTANT: Always use hooks from `packages/nextjs/hooks/scaffold-hbar` for contract interactions (legacy path segment; project branding is Scaffold-HBAR / `sh`). Always refer to the hook names as they exist in the codebase.**
-
-### UI Components
-
-**Always use `@scaffold-hbar-ui/components` library for web3 UI components:**
-
-- `Address`: Display Hedera EVM addresses with blockie avatars and explorer links
-- `AddressInput`: Input field with address validation
-- `Balance`: Show HBAR balance in tinybar/HBAR and fiat equivalent
-- `EtherInput`: Number input for EVM value entry (kept for EVM compatibility)
-- `IntegerInput`: Integer-only input with wei conversion
-
-### Styling
-
-**Use DaisyUI classes** for building frontend components.
-
-```tsx
-// ✅ Good - using DaisyUI classes
-<button className="btn btn-primary">Connect</button>
-<div className="card bg-base-100 shadow-xl">...</div>
-
-// ❌ Avoid - raw Tailwind when DaisyUI has a component
-<button className="px-4 py-2 bg-blue-500 text-white rounded">Connect</button>
-```
-
-### Configure Target Network before deploying to testnet / mainnet.
-
-#### Hardhat
-
-Add networks in `packages/hardhat/hardhat.config.ts` if not present.
-
-#### Foundry
-
-Add RPC endpoints in `packages/foundry/foundry.toml` if not present.
-
-#### NextJs
-
-Add networks in `packages/nextjs/scaffold.config.ts` if not present. This file also contains configuration for polling interval, API keys. Remember to decrease the polling interval for L2 chains.
-
-## Code Style Guide
-
-### Identifiers
-
-
-| Style            | Category                                                                                                               |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `UpperCamelCase` | class / interface / type / enum / decorator / type parameters / component functions in TSX / JSXElement type parameter |
-| `lowerCamelCase` | variable / parameter / function / property / module alias                                                              |
-| `CONSTANT_CASE`  | constant / enum / global variables                                                                                     |
-| `snake_case`     | for hardhat deploy files and foundry script files                                                                      |
-
-
-### Import Paths
-
-Use the `~~` path alias for imports in the nextjs package:
-
-```tsx
-import { useTargetNetwork } from "~~/hooks/scaffold-hbar";
-```
-
-### Creating Pages
-
-```tsx
-import type { NextPage } from "next";
-
-const Home: NextPage = () => {
-  return <div>Home</div>;
-};
-
-export default Home;
-```
-
-### TypeScript Conventions
-
-- Use `type` over `interface` for custom types
-- Types use `UpperCamelCase` without `T` prefix (use `Address` not `TAddress`)
-- Avoid explicit typing when TypeScript can infer the type
-
-### Comments
-
-Make comments that add information. Avoid redundant JSDoc for simple functions.
-
-## Documentation
-
-Use **Context7 MCP** tools to fetch up-to-date documentation for any library (Wagmi, Viem, RainbowKit, DaisyUI, Hardhat, Next.js, etc.). Context7 is configured as an MCP server and provides access to indexed documentation with code examples.
-
-## Specialized Agents
-
-Use these specialized agents for specific tasks:
-
-- `**grumpy-carlos-code-reviewer`**: Use this agent for code reviews before finalizing changes
-
+- Public MIT repository.
+- Valid `template.json`, `README.md`, and this `AGENTS.md`.
+- Fresh scaffold/install/lint/build succeeds and the app boots.
+- Real Hedera service usage remains load-bearing.
+- At least one public testnet transaction is independently verifiable through HashScan or Mirror Node.
+- No committed secrets or `.env` files.
+- Documentation explains prerequisites, environment variables, architecture and verification without requiring maintainer help.
