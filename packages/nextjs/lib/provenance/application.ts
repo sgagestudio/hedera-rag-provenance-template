@@ -3,6 +3,7 @@ import {
   ProvenanceAttestation,
   createAttestation,
   normalizeCid,
+  normalizeSequenceNumber,
   sha256Hex,
   validateEvidenceBytes,
 } from "./domain";
@@ -12,6 +13,7 @@ export type AnchorResult = ProvenanceAttestation & {
   topicId: string;
   transactionId: string;
   status: string;
+  sequenceNumber: number;
 };
 
 export type VerifyResult = {
@@ -31,8 +33,9 @@ export type ProvenanceDependencies = {
     topicId: string;
     transactionId: string;
     status: string;
+    sequenceNumber: number;
   }>;
-  findAttestation: (cid: string, digest: string) => Promise<MirrorMatch | null>;
+  findAttestation: (cid: string, digest: string, sequenceNumber?: number) => Promise<MirrorMatch | null>;
   now: () => Date;
   topicId: () => string;
 };
@@ -56,12 +59,13 @@ export function createProvenanceService(dependencies: ProvenanceDependencies) {
       return { ...attestation, ...submitted };
     },
 
-    async verifyEvidence(rawCid: string): Promise<VerifyResult> {
+    async verifyEvidence(rawCid: string, rawSequenceNumber?: number | string | null): Promise<VerifyResult> {
       const cid = normalizeCid(rawCid);
+      const sequenceNumber = normalizeSequenceNumber(rawSequenceNumber);
       const bytes = await dependencies.fetchEvidence(cid);
       validateEvidenceBytes(bytes);
       const digest = sha256Hex(bytes);
-      const match = await dependencies.findAttestation(cid, digest);
+      const match = await dependencies.findAttestation(cid, digest, sequenceNumber);
       const verified = Boolean(match && match.attestation.size === bytes.byteLength);
 
       return {
