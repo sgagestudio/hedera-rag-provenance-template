@@ -32,8 +32,43 @@ function decodeAttestation(message: MirrorMessage): ProvenanceAttestation | null
   }
 }
 
-export async function findMirrorAttestation(cid: string, digest: string): Promise<MirrorMatch | null> {
+function matchMirrorMessage(message: MirrorMessage, cid: string, digest: string): MirrorMatch | null {
+  const attestation = decodeAttestation(message);
+  if (
+    !attestation ||
+    attestation.cid !== cid ||
+    attestation.sha256.toLowerCase() !== digest.toLowerCase() ||
+    typeof message.sequence_number !== "number" ||
+    !Number.isSafeInteger(message.sequence_number) ||
+    typeof message.consensus_timestamp !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    sequenceNumber: message.sequence_number,
+    consensusTimestamp: message.consensus_timestamp,
+    attestation,
+  };
+}
+
+export async function findMirrorAttestation(
+  cid: string,
+  digest: string,
+  sequenceNumber?: number,
+): Promise<MirrorMatch | null> {
   const config = getProvenanceConfig();
+
+  if (sequenceNumber !== undefined) {
+    const directUrl = `${config.mirrorNodeUrl}/api/v1/topics/${encodeURIComponent(config.topicId)}/messages/${sequenceNumber}`;
+    const directResponse = await fetchWithTimeout(directUrl, { cache: "no-store" }, config.externalTimeoutMs);
+    if (directResponse.status === 404) return null;
+    if (!directResponse.ok) throw upstreamError(`Mirror Node returned HTTP ${directResponse.status}.`);
+
+    const directMessage = await readJsonWithLimit<MirrorMessage>(directResponse);
+    return matchMirrorMessage(directMessage, cid, digest);
+  }
+
   let url = `${config.mirrorNodeUrl}/api/v1/topics/${encodeURIComponent(config.topicId)}/messages?limit=100&order=desc`;
 
   for (let page = 0; page < config.mirrorMaxPages; page += 1) {
@@ -42,21 +77,8 @@ export async function findMirrorAttestation(cid: string, digest: string): Promis
 
     const payload = await readJsonWithLimit<MirrorResponse>(response);
     for (const message of payload.messages ?? []) {
-      const attestation = decodeAttestation(message);
-      if (
-        attestation &&
-        attestation.cid === cid &&
-        attestation.sha256.toLowerCase() === digest.toLowerCase() &&
-        typeof message.sequence_number === "number" &&
-        Number.isSafeInteger(message.sequence_number) &&
-        typeof message.consensus_timestamp === "string"
-      ) {
-        return {
-          sequenceNumber: message.sequence_number,
-          consensusTimestamp: message.consensus_timestamp,
-          attestation,
-        };
-      }
+      const match = matchMirrorMessage(message, cid, digest);
+      if (match) return match;
     }
 
     const next = payload.links?.next;

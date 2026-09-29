@@ -9,6 +9,7 @@ type AnchorResult = {
   topicId: string;
   transactionId: string;
   status: string;
+  sequenceNumber: number;
 };
 
 type VerifyResult = {
@@ -60,7 +61,9 @@ const Home: NextPage = () => {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`/api/provenance/verify?cid=${encodeURIComponent(result.cid)}`);
+      const response = await fetch(
+        `/api/provenance/verify?cid=${encodeURIComponent(result.cid)}&sequence=${result.sequenceNumber}`,
+      );
       const payload = await response.json();
       if (!response.ok && response.status !== 404) throw new Error(payload.error || "Unable to verify evidence");
       setVerification(payload as VerifyResult);
@@ -129,6 +132,10 @@ const Home: NextPage = () => {
               <div>
                 <dt className="font-semibold">HCS topic</dt>
                 <dd className="font-mono">{result.topicId}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">HCS sequence</dt>
+                <dd className="font-mono">{result.sequenceNumber}</dd>
               </div>
               <div>
                 <dt className="font-semibold">Transaction</dt>

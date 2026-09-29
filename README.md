@@ -122,7 +122,7 @@ Authorization: Bearer <PROVENANCE_WRITE_TOKEN>
 
 The browser demo is intentionally optimized for local development. For a public production UI, put your normal user/session authentication plus distributed rate limiting in front of the write route instead of exposing a server token to browser JavaScript.
 
-External IPFS/Mirror requests have bounded timeouts and response sizes. Mirror verification follows trusted same-origin pagination rather than searching only the latest page. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
+External IPFS/Mirror requests have bounded timeouts and response sizes. New anchors verify through a direct HCS sequence lookup, while CID-only verification follows trusted same-origin pagination rather than searching only the latest page. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
 ### 4. Create the HCS topic
 
@@ -174,7 +174,7 @@ Upload an evidence file. The server:
 3. submits a `rag-provenance-v1` JSON attestation to HCS;
 4. returns the CID, digest, HCS topic and transaction ID.
 
-Press **Verify from IPFS + Mirror Node** to retrieve the bytes, re-hash them and locate the matching HCS message.
+Press **Verify from IPFS + Mirror Node** to retrieve the bytes, re-hash them and locate the matching HCS message. New anchors use the HCS sequence returned by the transaction receipt for a one-request Mirror lookup; CID-only verification remains supported through bounded pagination.
 
 ## Attestation schema
 

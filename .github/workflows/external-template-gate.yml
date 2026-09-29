@@ -41,5 +41,6 @@ jobs:
           yarn install
           yarn hardhat:compile
           yarn next:lint --max-warnings=0
+          yarn next:test:provenance
           yarn next:check-types
           yarn next:build
