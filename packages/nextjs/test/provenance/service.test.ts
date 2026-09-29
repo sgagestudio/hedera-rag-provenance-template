@@ -13,6 +13,7 @@ function dependencies(overrides: Partial<ProvenanceDependencies> = {}): Provenan
       topicId: "0.0.123",
       transactionId: "0.0.1@1.2",
       status: "SUCCESS",
+      sequenceNumber: 7,
     }),
     findAttestation: async (requestedCid, digest) => ({
       sequenceNumber: 7,
@@ -38,7 +39,7 @@ test("anchorEvidence hashes the exact bytes before submitting", async () => {
   const deps = dependencies({
     submitAttestation: async attestation => {
       seen.digest = attestation.sha256;
-      return { topicId: "0.0.123", transactionId: "0.0.1@1.2", status: "SUCCESS" };
+      return { topicId: "0.0.123", transactionId: "0.0.1@1.2", status: "SUCCESS", sequenceNumber: 7 };
     },
   });
   const service = createProvenanceService(deps);
@@ -49,12 +50,34 @@ test("anchorEvidence hashes the exact bytes before submitting", async () => {
   assert.equal(seen.digest, sha256Hex(bytes));
   assert.equal(result.cid, cid);
   assert.equal(result.status, "SUCCESS");
+  assert.equal(result.sequenceNumber, 7);
 });
 
-test("verifyEvidence verifies CID, digest and byte size", async () => {
-  const service = createProvenanceService(dependencies());
-  const result = await service.verifyEvidence(cid);
+test("verifyEvidence forwards an exact HCS sequence when available", async () => {
+  let seenSequence: number | undefined;
+  const service = createProvenanceService(
+    dependencies({
+      findAttestation: async (requestedCid, digest, sequenceNumber) => {
+        seenSequence = sequenceNumber;
+        return {
+          sequenceNumber: 7,
+          consensusTimestamp: "1790547970.449867104",
+          attestation: createAttestation({
+            cid: requestedCid,
+            sha256: digest,
+            sourceUri: "https://example.com",
+            title: "evidence.txt",
+            mimeType: "text/plain",
+            size: Buffer.byteLength("evidence"),
+            capturedAt: "2026-09-28T00:00:00.000Z",
+          }),
+        };
+      },
+    }),
+  );
+  const result = await service.verifyEvidence(cid, 7);
 
+  assert.equal(seenSequence, 7);
   assert.equal(result.verified, true);
   assert.equal(result.sequenceNumber, 7);
   assert.equal(result.sha256, sha256Hex(Buffer.from("evidence")));
