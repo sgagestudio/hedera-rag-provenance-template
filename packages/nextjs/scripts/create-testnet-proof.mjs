@@ -56,11 +56,17 @@ async function main() {
       throw new Error(`Hedera message transaction finished with status ${transactionStatus}.`);
     }
 
+    const sequenceNumber = Number(messageReceipt.topicSequenceNumber.toString());
+    if (!Number.isSafeInteger(sequenceNumber) || sequenceNumber <= 0) {
+      throw new Error("Hedera message receipt did not include a valid HCS sequence number.");
+    }
+
     const mirror = await waitForMirrorMessage({
       mirrorBase,
       topicId: topic.topicId,
       cid,
       digest,
+      sequenceNumber,
     });
 
     const proof = {
