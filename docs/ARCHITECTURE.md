@@ -34,7 +34,9 @@ Adding a database as the verification source would create a second mutable sourc
 
 ## External-query bounds
 
-Verification no longer reads only the latest 100 HCS messages. It follows Mirror Node pagination until it finds the attestation, the topic history ends, or `PROVENANCE_MIRROR_MAX_PAGES` is reached.
+New HCS submissions return their `topicSequenceNumber` in the Hedera receipt. The anchor API returns that sequence and the browser sends it back during verification, allowing the Mirror Node adapter to query the exact `/messages/{sequence}` resource in one request.
+
+For older/bookmarked CIDs where no sequence is available, verification falls back to bounded Mirror Node pagination until it finds the attestation, the topic history ends, or `PROVENANCE_MIRROR_MAX_PAGES` is reached. This keeps backwards compatibility without making the common path scan topic history.
 
 Every external HTTP request has `PROVENANCE_EXTERNAL_TIMEOUT_MS`, and retrieved IPFS evidence is streamed with the same 5 MiB upper bound used for uploads. Mirror pagination is restricted to the configured Mirror Node origin.
 
