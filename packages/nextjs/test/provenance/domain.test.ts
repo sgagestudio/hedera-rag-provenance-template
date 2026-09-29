@@ -2,6 +2,7 @@ import {
   MAX_EVIDENCE_BYTES,
   createAttestation,
   normalizeCid,
+  normalizeSequenceNumber,
   normalizeSourceUri,
   sha256Hex,
   validateEvidenceBytes,
@@ -45,4 +46,12 @@ test("attestations normalize metadata and enforce one-message size", () => {
 
   assert.equal(attestation.sha256, "a".repeat(64));
   assert.equal(attestation.title, "Example");
+});
+
+
+test("HCS sequence validation accepts positive integers only", () => {
+  assert.equal(normalizeSequenceNumber("7"), 7);
+  assert.equal(normalizeSequenceNumber(undefined), undefined);
+  assert.throws(() => normalizeSequenceNumber("0"), /sequence/i);
+  assert.throws(() => normalizeSequenceNumber("1.5"), /sequence/i);
 });
