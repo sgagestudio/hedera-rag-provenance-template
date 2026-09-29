@@ -32,7 +32,7 @@ function decodeAttestation(message: MirrorMessage): ProvenanceAttestation | null
   }
 }
 
-async function matchMirrorMessage(message: MirrorMessage, cid: string, digest: string): Promise<MirrorMatch | null> {
+function matchMirrorMessage(message: MirrorMessage, cid: string, digest: string): MirrorMatch | null {
   const attestation = decodeAttestation(message);
   if (
     !attestation ||
@@ -78,7 +78,7 @@ export async function findMirrorAttestation(
 
     const payload = await readJsonWithLimit<MirrorResponse>(response);
     for (const message of payload.messages ?? []) {
-      const match = await matchMirrorMessage(message, cid, digest);
+      const match = matchMirrorMessage(message, cid, digest);
       if (match) return match;
     }
 
