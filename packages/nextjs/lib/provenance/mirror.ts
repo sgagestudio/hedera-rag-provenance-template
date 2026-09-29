@@ -60,8 +60,7 @@ export async function findMirrorAttestation(
   const config = getProvenanceConfig();
 
   if (sequenceNumber !== undefined) {
-    const directUrl =
-      `${config.mirrorNodeUrl}/api/v1/topics/${encodeURIComponent(config.topicId)}/messages/${sequenceNumber}`;
+    const directUrl = `${config.mirrorNodeUrl}/api/v1/topics/${encodeURIComponent(config.topicId)}/messages/${sequenceNumber}`;
     const directResponse = await fetchWithTimeout(directUrl, { cache: "no-store" }, config.externalTimeoutMs);
     if (directResponse.status === 404) return null;
     if (!directResponse.ok) throw upstreamError(`Mirror Node returned HTTP ${directResponse.status}.`);
