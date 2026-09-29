@@ -56,13 +56,13 @@ This repository is intended to satisfy the Scaffold-HBAR external-template gate:
 
 A real bounty proof has been produced and committed at `proofs/testnet-proof.json`.
 
-- HCS topic: `0.0.10768245`
+- HCS topic: `0.0.10780021`
 - transaction status: `SUCCESS`
 - HCS sequence: `1`
 - CID: `QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS`
 - SHA-256: `704d43948304f88adfe78a98f7f4f2b139a72062562aa20352f5588c387e3cc4`
-- HashScan: https://hashscan.io/testnet/transaction/0.0.10737175%401790638704.703142857
-- Mirror Node: https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10768245/messages/1
+- HashScan: https://hashscan.io/testnet/transaction/0.0.10737175%401790702976.761376886
+- Mirror Node: https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10780021/messages/1
 
 The committed proof contains only public verification data. Operator credentials remain outside the repository.
 
