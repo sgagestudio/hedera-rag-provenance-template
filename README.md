@@ -66,6 +66,17 @@ A real bounty proof has been produced and committed at `proofs/testnet-proof.jso
 
 The committed proof contains only public verification data. Operator credentials remain outside the repository.
 
+## Scaffold this template
+
+Start from a clean directory and use the public external-template path:
+
+```bash
+npm create scaffold-hbar@latest --template sgagestudio/hedera-rag-provenance-template
+cd <your-project-directory>
+```
+
+That command is the supported entry point for this template and is exercised by the repository's External Template Gate in CI.
+
 ## Prerequisites
 
 - Node.js >= 20.18.3
@@ -111,6 +122,23 @@ PROVENANCE_WRITE_TOKEN=choose-a-long-random-server-secret
 ```
 
 Never expose the operator key or write token via a `NEXT_PUBLIC_*` variable.
+
+Environment reference:
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `HEDERA_OPERATOR_ID` | yes for anchoring | Server-side Hedera account used to submit HCS messages. |
+| `HEDERA_OPERATOR_KEY` | yes for anchoring | Server-only private key for the operator account. Never expose or commit it. |
+| `HEDERA_TOPIC_ID` | yes after topic creation | Canonical HCS topic used for provenance attestations. |
+| `HEDERA_MIRROR_NODE_URL` | yes | Mirror Node base URL; defaults to Hedera testnet. |
+| `IPFS_API_URL` | yes | Kubo RPC endpoint used to add/pin evidence. |
+| `IPFS_GATEWAY_URL` | yes | Gateway used to retrieve evidence during verification. |
+| `PROVENANCE_WRITE_TOKEN` | production writes | Enables authenticated write calls when `NODE_ENV=production`. |
+| `PROVENANCE_EXTERNAL_TIMEOUT_MS` | no | Timeout bound for external IPFS/Mirror calls. |
+| `PROVENANCE_MIRROR_MAX_PAGES` | no | Maximum pages used by the CID-only Mirror fallback. |
+| `PROVENANCE_MAX_INFLIGHT_ANCHORS` | no | Per-process cap for concurrent anchor operations. |
+
+Wallet/RPC variables already supplied by Scaffold-HBAR remain in `packages/nextjs/.env.example`; they are independent of the server-only provenance credentials above.
 
 ### Production write protection
 
