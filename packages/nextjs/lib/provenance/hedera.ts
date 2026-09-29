@@ -35,6 +35,9 @@ export async function submitAttestationToHedera(attestation: ProvenanceAttestati
 
     if (status !== "SUCCESS") throw upstreamError(`Hedera transaction finished with status ${status}.`);
 
+    if (!receipt.topicSequenceNumber) {
+      throw upstreamError("Hedera receipt did not contain an HCS sequence number.");
+    }
     const sequenceNumber = Number(receipt.topicSequenceNumber.toString());
     if (!Number.isSafeInteger(sequenceNumber) || sequenceNumber <= 0) {
       throw upstreamError("Hedera receipt did not contain a valid HCS sequence number.");
