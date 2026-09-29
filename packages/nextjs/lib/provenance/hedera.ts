@@ -20,6 +20,7 @@ export async function submitAttestationToHedera(attestation: ProvenanceAttestati
   topicId: string;
   transactionId: string;
   status: string;
+  sequenceNumber: number;
 }> {
   const config = getProvenanceConfig();
   const client = createHederaClient();
