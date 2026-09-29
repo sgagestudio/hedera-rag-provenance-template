@@ -51,6 +51,15 @@ export function normalizeCid(raw: string): string {
   return cid;
 }
 
+export function normalizeSequenceNumber(raw?: number | string | null): number | undefined {
+  if (raw === undefined || raw === null || raw === "") return undefined;
+  const value = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw invalidInput("HCS sequence number is invalid.");
+  }
+  return value;
+}
+
 function cleanText(raw: string, maxChars: number, label: string): string {
   const value = raw.replace(CONTROL_CHARACTERS, "").trim();
   if (value.length > maxChars) throw invalidInput(`${label} is too long.`);
