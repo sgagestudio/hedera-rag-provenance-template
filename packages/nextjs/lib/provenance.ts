@@ -10,6 +10,7 @@ export {
   createAttestation,
   normalizeCid,
   normalizeMimeType,
+  normalizeSequenceNumber,
   normalizeSourceUri,
   normalizeTitle,
   parseAttestation,
