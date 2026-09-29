@@ -1,119 +1,148 @@
-# Demo video script — target 3:50–4:20
+# Demo video script — simple recording version (target 3:15–3:45)
 
-The organizer requires a public video under five minutes. This version matches the hardened provenance flow and avoids showing any credentials.
+The submission form requires a public video under five minutes. This version is intentionally high-level: explain the idea, show the working flow, and prove the Hedera transaction without diving into implementation internals.
 
-## 0:00–0:25 — Problem and reusable template
+## Recording format
 
-**Screen:** repository README title, then the scaffold command.
+Screen recording + voice-over is enough for this script. Keep the relevant tabs open before recording so the video is mostly narration and simple tab changes.
+
+Recommended tabs:
+
+1. GitHub README / architecture diagram
+2. Local app
+3. `proofs/testnet-proof.json`
+4. HashScan transaction
+5. Mirror Node message
+6. GitHub Actions (optional closing proof)
+
+Do not show `.env.local`, private keys, wallet seeds, shell history with secrets, or environment-variable values.
+
+---
+
+## 0:00–0:35 — The problem
+
+**Screen:** repository README and the main flow diagram.
 
 **Narration:**
 
-“RAG systems often preserve a URL but lose the exact source bytes they actually ingested. RAG Provenance is a Scaffold-HBAR template that content-addresses those bytes, timestamps their digest on Hedera, and lets another verifier prove later that the retrieved content is the same version.”
+“AI and RAG systems usually keep a link to a source, but that does not prove which exact version of the source was actually used. A webpage or document can change later, so simply storing the URL is not enough.
 
-Show:
+This template solves that by creating a verifiable record of the exact source data used by the AI system.”
 
-```bash
-npm create scaffold-hbar@latest --template sgagestudio/hedera-rag-provenance-template
+---
+
+## 0:35–1:15 — The idea and design
+
+**Screen:** README flow diagram.
+
+**Narration:**
+
+“The design is simple.
+
+First, the original source is stored using IPFS, so it gets a content-based identifier. We also calculate a SHA-256 hash of the exact bytes.
+
+Then we write a small attestation to Hedera Consensus Service containing the IPFS identifier, the hash, and basic source information.
+
+Hedera gives that record an immutable consensus timestamp and sequence number.
+
+Later, anyone can retrieve the source again, calculate its hash, and compare it with the Hedera record. If everything matches, we know we are looking at exactly the same evidence that was originally anchored.”
+
+**Simple mental model to show on screen:**
+
+```
+Source
+  ↓
+IPFS + SHA-256
+  ↓
+Hedera HCS attestation
+  ↓
+Public verification
 ```
 
-## 0:25–0:55 — Architecture and trust model
+---
 
-**Screen:** `docs/ARCHITECTURE.md` and the README flow diagram.
+## 1:15–2:10 — Live demo: anchor evidence
 
-**Narration:**
+**Screen:** local app.
 
-“The implementation is split into a deterministic domain layer, an application service, and network adapters for IPFS, Hedera HCS and Mirror Node. Evidence bytes stay in IPFS; HCS stores only a compact CID, SHA-256 digest and source metadata. The Solidity ProvenancePolicy contract is the discovery anchor for the canonical HCS topic and schema.”
-
-Briefly point to:
-
-- `lib/provenance/domain.ts`
-- `lib/provenance/application.ts`
-- `lib/provenance/ipfs.ts`
-- `lib/provenance/hedera.ts`
-- `lib/provenance/mirror.ts`
-
-## 0:55–1:25 — Start the local stack safely
-
-**Screen:** terminal, with no environment file or credential values visible.
-
-Show:
-
-```bash
-yarn ipfs:up
-yarn next:dev
-```
+Upload a small public/non-sensitive text or PDF file and press **Anchor provenance**.
 
 **Narration:**
 
-“Kubo runs locally through Docker, and Hedera credentials remain server-only. The write endpoint is convenient for local development, but in production it is disabled until a server-side write token is configured. Upload size, metadata, concurrency and external network calls are bounded.”
+“Here is the template running locally.
 
-Do **not** open `.env.local` or print any environment variables.
+I select a source file and anchor its provenance. The application stores the evidence in IPFS, hashes the exact file, and records the provenance attestation on Hedera Testnet.
 
-## 1:25–2:10 — Anchor exact evidence bytes
+The result gives us the IPFS CID, the SHA-256 hash, the Hedera topic, the sequence number, and the transaction ID.
 
-**Screen:** app UI.
+The important point is that the document itself does not need to be placed on-chain. Hedera stores the small verification record, while IPFS stores the content.”
 
-Upload a small public text or PDF source and press **Anchor provenance**.
+Pause briefly so the result is readable.
 
-Call out the returned:
+---
 
-- IPFS CID
-- SHA-256
-- HCS topic
-- HCS sequence
-- transaction ID
-
-**Narration:**
-
-“The server hashes the exact uploaded bytes, pins them to IPFS, validates and bounds the attestation metadata, and submits the compact attestation to a submit-key-restricted HCS topic. Hedera’s receipt also returns the topic sequence number, which is carried forward as a direct verification pointer.”
-
-## 2:10–2:55 — Independent verification without topic scanning
+## 2:10–2:45 — Verify it
 
 **Screen:** press **Verify from IPFS + Mirror Node**.
 
 **Narration:**
 
-“Verification does not trust application state. It retrieves the bytes again from IPFS with a strict size limit, recomputes SHA-256, and asks Mirror Node for the exact HCS sequence returned by Hedera. That makes the normal verification path one Mirror request instead of scanning topic history. For older CID-only links, the template keeps a bounded same-origin pagination fallback.”
+“Now I can verify the evidence independently.
 
-Show the successful **Verified** state with the HCS sequence and consensus timestamp.
+The application retrieves the content from IPFS, calculates the hash again, and reads the matching Hedera Consensus Service message through Mirror Node.
 
-## 2:55–3:25 — Public Hedera proof
+If the source bytes, hash, and Hedera attestation all match, the result is verified.
 
-**Screen:** open `proofs/testnet-proof.json`.
+This means a later user or AI system does not need to trust the application database to know which evidence was originally used.”
 
-Then open the **current** `hashscanTransactionUrl` and `mirrorNodeMessageUrl` values from that file.
+Show the successful **Verified** state.
 
-**Narration:**
+---
 
-“This repository includes a real Hedera Testnet proof, not mocked chain data. The committed proof records a SUCCESS transaction, the HCS topic and sequence, the IPFS CID, SHA-256 digest, consensus timestamp, and independent HashScan and Mirror Node links.”
+## 2:45–3:15 — Public proof
 
-Do not hard-code an older topic or transaction in the recording; use the values currently committed in `proofs/testnet-proof.json`.
-
-## 3:25–4:10 — Security, performance and developer handoff
-
-**Screen:** `docs/ARCHITECTURE.md`, test files and green GitHub Actions.
-
-Show:
-
-- domain/application/adapters separation
-- `test/provenance/`
-- Lint — green
-- CI — green
-- External Template Gate — green
+**Screen:** switch to `proofs/testnet-proof.json`, then HashScan, then Mirror Node.
 
 **Narration:**
 
-“The template is hardened around the expensive boundaries. External calls have timeouts, IPFS and Mirror responses are size-bounded, Mirror pagination cannot cross to an unexpected origin, browser writes reject cross-origin requests, production writes require authorization, and local write concurrency is capped. Provider errors are mapped to bounded client responses rather than reflecting internal configuration. The dependency lockfile also pins the patched Picomatch lines, and the provenance unit tests run in CI alongside compile, contract tests, type-check and build.”
+“The repository also includes a real public Hedera Testnet proof.
 
-Close on the repository README.
+This is the committed proof file, and here is the same transaction visible independently in HashScan and the corresponding HCS message in Mirror Node.
+
+So the Hedera integration shown in the template is real and publicly verifiable, not mocked.”
+
+Use the URLs from the current `proofs/testnet-proof.json`.
+
+---
+
+## 3:15–3:40 — Why this is useful as a template
+
+**Screen:** return to README. Optionally show green GitHub Actions.
+
+**Narration:**
+
+“The goal is not just this demo. This is a reusable Scaffold-HBAR template.
+
+A developer can scaffold it as a starting point for RAG systems, AI agents, document pipelines, audits, or any workflow where they need to prove which exact source data was used at a particular point in time.
+
+IPFS provides content addressing, and Hedera provides the public consensus record and timestamp. Together they give the application a simple provenance layer that developers can reuse.”
+
+Close on the repository title.
+
+---
+
+## Optional final sentence
+
+“Thanks for reviewing RAG Provenance.”
 
 ## Recording checklist
 
-- Keep total runtime below 5:00; target about 4:00.
-- Use the current `main` branch after the final hardening merge.
-- Run the demo locally so the browser upload works without exposing a production write token.
-- Use a small **public/non-sensitive** evidence file.
-- Never show `HEDERA_OPERATOR_KEY`, `PROVENANCE_WRITE_TOKEN`, `.env.local`, shell history containing secrets, or wallet seeds.
-- Open chain URLs from the current `proofs/testnet-proof.json`, not from an old script or note.
-- Make the successful verification state, HCS sequence, HashScan transaction and Mirror Node message readable on screen.
-- Use a public video URL that reviewers can open without authentication.
+- Stay below 5:00; target about 3:30.
+- Screen recording + voice-over.
+- Prepare tabs before starting.
+- Keep explanations high-level.
+- Show one real anchor and one successful verification.
+- Make the CID, SHA-256, HCS topic/sequence and transaction visible long enough to read.
+- Show the public HashScan and Mirror Node evidence.
+- Never show secrets, `.env.local`, wallet seed, private keys or environment-variable values.
+- Upload the final video somewhere reviewers can open without authentication.
