@@ -50,27 +50,49 @@ async function fetchJsonWithTimeout(url, timeoutMs = 5_000) {
   }
 }
 
-export async function waitForMirrorMessage({ mirrorBase, topicId, cid, digest, timeoutMs = 45_000 }) {
+function matchesProofMessage(message, cid, digest) {
+  try {
+    const decoded = Buffer.from(message.message, "base64").toString("utf8");
+    const attestation = JSON.parse(decoded);
+    return attestation.schema === PROVENANCE_SCHEMA && attestation.cid === cid && attestation.sha256 === digest;
+  } catch {
+    return false;
+  }
+}
+
+export async function waitForMirrorMessage({
+  mirrorBase,
+  topicId,
+  cid,
+  digest,
+  sequenceNumber,
+  timeoutMs = 45_000,
+}) {
   const deadline = Date.now() + timeoutMs;
   const normalizedBase = mirrorBase.replace(/\/$/, "");
 
   while (Date.now() < deadline) {
-    const payload = await fetchJsonWithTimeout(
-      `${normalizedBase}/api/v1/topics/${encodeURIComponent(topicId)}/messages?limit=25&order=desc`,
-    );
-
-    for (const message of payload?.messages ?? []) {
-      try {
-        const decoded = Buffer.from(message.message, "base64").toString("utf8");
-        const attestation = JSON.parse(decoded);
-        if (attestation.schema === PROVENANCE_SCHEMA && attestation.cid === cid && attestation.sha256 === digest) {
+    if (sequenceNumber !== undefined) {
+      const message = await fetchJsonWithTimeout(
+        `${normalizedBase}/api/v1/topics/${encodeURIComponent(topicId)}/messages/${sequenceNumber}`,
+      );
+      if (message && matchesProofMessage(message, cid, digest)) {
+        return {
+          sequenceNumber: message.sequence_number,
+          consensusTimestamp: message.consensus_timestamp,
+        };
+      }
+    } else {
+      const payload = await fetchJsonWithTimeout(
+        `${normalizedBase}/api/v1/topics/${encodeURIComponent(topicId)}/messages?limit=25&order=desc`,
+      );
+      for (const message of payload?.messages ?? []) {
+        if (matchesProofMessage(message, cid, digest)) {
           return {
             sequenceNumber: message.sequence_number,
             consensusTimestamp: message.consensus_timestamp,
           };
         }
-      } catch {
-        // Ignore unrelated or malformed messages.
       }
     }
 
