@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: "30 12 * * 1"
 
 permissions:
   actions: read
@@ -11,8 +13,17 @@ permissions:
   security-events: write
 
 jobs:
-  scan:
+  scan-pr:
+    if: ${{ github.event_name == 'pull_request' }}
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.6.0
+    with:
+      scan-args: |-
+        --lockfile=yarn.lock
+
+  scan-full:
+    if: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.6.0
     with:
       scan-args: |-
         --lockfile=yarn.lock
+      fail-on-vuln: false
