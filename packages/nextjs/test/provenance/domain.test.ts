@@ -1,9 +1,11 @@
 import {
   MAX_EVIDENCE_BYTES,
+  PROVENANCE_SCHEMA,
   createAttestation,
   normalizeCid,
   normalizeSequenceNumber,
   normalizeSourceUri,
+  parseAttestation,
   sha256Hex,
   validateEvidenceBytes,
 } from "../../lib/provenance/domain";
@@ -54,4 +56,22 @@ test("HCS sequence validation accepts positive integers only", () => {
   assert.equal(normalizeSequenceNumber(undefined), undefined);
   assert.throws(() => normalizeSequenceNumber("0"), /sequence/i);
   assert.throws(() => normalizeSequenceNumber("1.5"), /sequence/i);
+});
+
+
+test("legacy v1 attestations remain readable with older metadata conventions", () => {
+  const legacyTitle = "x".repeat(220);
+  const parsed = parseAttestation({
+    schema: PROVENANCE_SCHEMA,
+    cid: "QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS",
+    sha256: "a".repeat(64),
+    sourceUri: "doi:10.1000/example",
+    title: legacyTitle,
+    mimeType: "text/plain",
+    size: 12,
+    capturedAt: "2026-09-27T00:00:00.000Z",
+  });
+
+  assert.equal(parsed?.sourceUri, "doi:10.1000/example");
+  assert.equal(parsed?.title, legacyTitle);
 });
