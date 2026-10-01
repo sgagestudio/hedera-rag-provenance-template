@@ -1,12 +1,21 @@
-import { payloadTooLarge, upstreamError } from "./errors";
+import { ProvenanceError, payloadTooLarge, upstreamError } from "./errors";
 
-export async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+type ResponseConsumer<T> = (response: Response) => Promise<T>;
+
+export async function fetchWithTimeout<T>(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+  consume: ResponseConsumer<T>,
+): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    return await consume(response);
   } catch (cause) {
+    if (cause instanceof ProvenanceError) throw cause;
     if (controller.signal.aborted) throw upstreamError("External request timed out.", cause);
     throw upstreamError("External request failed.", cause);
   } finally {
@@ -14,15 +23,14 @@ export async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs
   }
 }
 
-export async function readBytesWithLimit(response: Response, maxBytes: number): Promise<Uint8Array> {
-  const contentLength = Number(response.headers.get("content-length"));
-  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
-    throw payloadTooLarge("Retrieved evidence exceeds the 5 MiB verification limit.");
-  }
+async function readStreamWithLimit(
+  stream: ReadableStream<Uint8Array> | null,
+  maxBytes: number,
+  message: string,
+): Promise<Uint8Array> {
+  if (!stream) return new Uint8Array();
 
-  if (!response.body) return new Uint8Array();
-
-  const reader = response.body.getReader();
+  const reader = stream.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
 
@@ -33,7 +41,7 @@ export async function readBytesWithLimit(response: Response, maxBytes: number): 
       total += value.byteLength;
       if (total > maxBytes) {
         await reader.cancel();
-        throw payloadTooLarge("Retrieved evidence exceeds the 5 MiB verification limit.");
+        throw payloadTooLarge(message);
       }
       chunks.push(value);
     }
@@ -48,6 +56,28 @@ export async function readBytesWithLimit(response: Response, maxBytes: number): 
     offset += chunk.byteLength;
   }
   return result;
+}
+
+export async function readBytesWithLimit(response: Response, maxBytes: number): Promise<Uint8Array> {
+  const contentLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    throw payloadTooLarge("Retrieved evidence exceeds the 5 MiB verification limit.");
+  }
+
+  return readStreamWithLimit(
+    response.body,
+    maxBytes,
+    "Retrieved evidence exceeds the 5 MiB verification limit.",
+  );
+}
+
+export async function readRequestBodyWithLimit(request: Request, maxBytes: number): Promise<Uint8Array> {
+  const contentLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    throw payloadTooLarge("Request body exceeds the template limit.");
+  }
+
+  return readStreamWithLimit(request.body, maxBytes, "Request body exceeds the template limit.");
 }
 
 export async function readJsonWithLimit<T>(response: Response, maxBytes = 2 * 1024 * 1024): Promise<T> {
