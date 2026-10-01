@@ -1,5 +1,6 @@
 import {
   AnchorInput,
+  MAX_CID_CHARS,
   ProvenanceAttestation,
   createAttestation,
   normalizeCid,
@@ -45,15 +46,24 @@ export function createProvenanceService(dependencies: ProvenanceDependencies) {
     async anchorEvidence(input: AnchorInput): Promise<AnchorResult> {
       validateEvidenceBytes(input.bytes);
       const digest = sha256Hex(input.bytes);
-      const cid = normalizeCid(await dependencies.addEvidence(input.bytes));
-      const attestation = createAttestation({
-        cid,
+      const capturedAt = dependencies.now().toISOString();
+
+      // Validate metadata and worst-case serialized attestation size before
+      // permanently pinning evidence in IPFS.
+      const preflight = createAttestation({
+        cid: "a".repeat(MAX_CID_CHARS),
         sha256: digest,
         sourceUri: input.sourceUri,
         title: input.title,
         mimeType: input.mimeType,
         size: input.bytes.byteLength,
-        capturedAt: dependencies.now().toISOString(),
+        capturedAt,
+      });
+
+      const cid = normalizeCid(await dependencies.addEvidence(input.bytes));
+      const attestation = createAttestation({
+        ...preflight,
+        cid,
       });
       const submitted = await dependencies.submitAttestation(attestation);
       return { ...attestation, ...submitted };
