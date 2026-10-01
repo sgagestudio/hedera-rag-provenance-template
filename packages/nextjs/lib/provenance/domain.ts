@@ -154,15 +154,28 @@ export function parseAttestation(value: unknown): ProvenanceAttestation | null {
   if (candidate.title !== null && typeof candidate.title !== "string") return null;
 
   try {
-    return createAttestation({
-      cid: candidate.cid,
-      sha256: candidate.sha256,
+    const cid = normalizeCid(candidate.cid);
+    const digest = candidate.sha256.toLowerCase();
+    if (!SHA256_PATTERN.test(digest)) return null;
+    if (!Number.isSafeInteger(candidate.size) || candidate.size <= 0 || candidate.size > MAX_EVIDENCE_BYTES) {
+      return null;
+    }
+    if (Number.isNaN(Date.parse(candidate.capturedAt))) return null;
+
+    // v1 read compatibility is intentionally broader than current write
+    // validation. Older valid attestations may contain non-HTTP source
+    // identifiers (for example DOI URIs) or metadata lengths no longer
+    // accepted for new writes.
+    return {
+      schema: PROVENANCE_SCHEMA,
+      cid,
+      sha256: digest,
       sourceUri: candidate.sourceUri as string | null,
       title: candidate.title as string | null,
       mimeType: candidate.mimeType,
       size: candidate.size,
-      capturedAt: candidate.capturedAt,
-    });
+      capturedAt: new Date(candidate.capturedAt).toISOString(),
+    };
   } catch {
     return null;
   }
