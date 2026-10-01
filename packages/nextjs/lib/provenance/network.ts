@@ -1,11 +1,17 @@
 import { payloadTooLarge, upstreamError } from "./errors";
 
-export async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+export async function fetchWithTimeout<T>(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+  consume: (response: Response) => Promise<T>,
+): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    return await consume(response);
   } catch (cause) {
     if (controller.signal.aborted) throw upstreamError("External request timed out.", cause);
     throw upstreamError("External request failed.", cause);
