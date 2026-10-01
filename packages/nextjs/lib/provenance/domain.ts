@@ -153,17 +153,30 @@ export function parseAttestation(value: unknown): ProvenanceAttestation | null {
   if (candidate.sourceUri !== null && typeof candidate.sourceUri !== "string") return null;
   if (candidate.title !== null && typeof candidate.title !== "string") return null;
 
+  let cid: string;
   try {
-    return createAttestation({
-      cid: candidate.cid,
-      sha256: candidate.sha256,
-      sourceUri: candidate.sourceUri as string | null,
-      title: candidate.title as string | null,
-      mimeType: candidate.mimeType,
-      size: candidate.size,
-      capturedAt: candidate.capturedAt,
-    });
+    cid = normalizeCid(candidate.cid);
   } catch {
     return null;
   }
+
+  const digest = candidate.sha256.toLowerCase();
+  if (!SHA256_PATTERN.test(digest)) return null;
+  if (!Number.isSafeInteger(candidate.size) || candidate.size <= 0) return null;
+  if (Number.isNaN(Date.parse(candidate.capturedAt))) return null;
+
+  // Verification must remain compatible with already-published v1 messages.
+  // New writes use the stricter HTTP(S)/length normalization above, but old
+  // v1 HCS records may legitimately contain values such as doi: URIs or
+  // longer titles. Preserve those fields when reading historical messages.
+  return {
+    schema: PROVENANCE_SCHEMA,
+    cid,
+    sha256: digest,
+    sourceUri: candidate.sourceUri as string | null,
+    title: candidate.title as string | null,
+    mimeType: candidate.mimeType,
+    size: candidate.size,
+    capturedAt: candidate.capturedAt,
+  };
 }
