@@ -4,6 +4,7 @@ import {
   normalizeCid,
   normalizeSequenceNumber,
   normalizeSourceUri,
+  parseAttestation,
   sha256Hex,
   validateEvidenceBytes,
 } from "../../lib/provenance/domain";
@@ -54,4 +55,21 @@ test("HCS sequence validation accepts positive integers only", () => {
   assert.equal(normalizeSequenceNumber(undefined), undefined);
   assert.throws(() => normalizeSequenceNumber("0"), /sequence/i);
   assert.throws(() => normalizeSequenceNumber("1.5"), /sequence/i);
+});
+
+
+test("legacy v1 verification accepts metadata that predates current write restrictions", () => {
+  const legacy = parseAttestation({
+    schema: "rag-provenance-v1",
+    cid: "QmQhxnPAcRweXUnoX2bNo54mR96CcNqLufcHnY5nsAZNKS",
+    sha256: "b".repeat(64),
+    sourceUri: "doi:10.1000/example",
+    title: "x".repeat(200),
+    mimeType: "text/plain",
+    size: 12,
+    capturedAt: "2026-09-27T00:00:00.000Z",
+  });
+
+  assert.equal(legacy?.sourceUri, "doi:10.1000/example");
+  assert.equal(legacy?.title?.length, 200);
 });
