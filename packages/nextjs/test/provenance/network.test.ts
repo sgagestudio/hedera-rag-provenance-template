@@ -1,4 +1,4 @@
-import { readBytesWithLimit, trustedNextUrl } from "../../lib/provenance/network";
+import { fetchWithTimeout, readBytesWithLimit, trustedNextUrl } from "../../lib/provenance/network";
 import assert from "node:assert/strict";
 import test from "node:test";
 
@@ -19,4 +19,34 @@ test("trustedNextUrl rejects cross-origin pagination", () => {
     () => trustedNextUrl("https://testnet.mirrornode.hedera.com", "https://evil.example/messages"),
     /unexpected origin/i,
   );
+});
+
+
+test("fetchWithTimeout remains active while the response body is consumed", async () => {
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async (_input, init) => {
+    const signal = init?.signal as AbortSignal;
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        signal.addEventListener(
+          "abort",
+          () => controller.error(new DOMException("aborted", "AbortError")),
+          { once: true },
+        );
+      },
+    });
+    return new Response(stream, { status: 200 });
+  };
+
+  try {
+    await assert.rejects(
+      () =>
+        fetchWithTimeout("https://example.test/slow", {}, 20, response =>
+          readBytesWithLimit(response, 1024),
+        ),
+      /timed out/i,
+    );
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
 });
