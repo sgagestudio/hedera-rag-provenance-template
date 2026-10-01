@@ -61,21 +61,22 @@ export async function findMirrorAttestation(
 
   if (sequenceNumber !== undefined) {
     const directUrl = `${config.mirrorNodeUrl}/api/v1/topics/${encodeURIComponent(config.topicId)}/messages/${sequenceNumber}`;
-    const directResponse = await fetchWithTimeout(directUrl, { cache: "no-store" }, config.externalTimeoutMs);
-    if (directResponse.status === 404) return null;
-    if (!directResponse.ok) throw upstreamError(`Mirror Node returned HTTP ${directResponse.status}.`);
+    return fetchWithTimeout(directUrl, { cache: "no-store" }, config.externalTimeoutMs, async directResponse => {
+      if (directResponse.status === 404) return null;
+      if (!directResponse.ok) throw upstreamError(`Mirror Node returned HTTP ${directResponse.status}.`);
 
-    const directMessage = await readJsonWithLimit<MirrorMessage>(directResponse);
-    return matchMirrorMessage(directMessage, cid, digest);
+      const directMessage = await readJsonWithLimit<MirrorMessage>(directResponse);
+      return matchMirrorMessage(directMessage, cid, digest);
+    });
   }
 
   let url = `${config.mirrorNodeUrl}/api/v1/topics/${encodeURIComponent(config.topicId)}/messages?limit=100&order=desc`;
 
   for (let page = 0; page < config.mirrorMaxPages; page += 1) {
-    const response = await fetchWithTimeout(url, { cache: "no-store" }, config.externalTimeoutMs);
-    if (!response.ok) throw upstreamError(`Mirror Node returned HTTP ${response.status}.`);
-
-    const payload = await readJsonWithLimit<MirrorResponse>(response);
+    const payload = await fetchWithTimeout(url, { cache: "no-store" }, config.externalTimeoutMs, async response => {
+      if (!response.ok) throw upstreamError(`Mirror Node returned HTTP ${response.status}.`);
+      return readJsonWithLimit<MirrorResponse>(response);
+    });
     for (const message of payload.messages ?? []) {
       const match = matchMirrorMessage(message, cid, digest);
       if (match) return match;
