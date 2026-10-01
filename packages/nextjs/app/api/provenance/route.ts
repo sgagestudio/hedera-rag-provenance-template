@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const boundedRequest = new Request(request.url, {
       method: request.method,
       headers: request.headers,
-      body,
+      body: new Uint8Array(body).buffer,
     });
     const formData = await boundedRequest.formData();
     const file = formData.get("file");
