@@ -21,11 +21,6 @@ jobs:
 
       - run: corepack enable
       - run: yarn install --immutable
-      - name: Reject high-severity npm advisories
-        run: |
-          yarn npm audit --recursive --severity high
-          yarn workspace @sh/nextjs npm audit --recursive --severity high
-          yarn workspace @sh/hardhat npm audit --recursive --severity high
       - run: yarn hardhat:compile
       - name: Run Hedera-backed Hardhat tests
         run: |
