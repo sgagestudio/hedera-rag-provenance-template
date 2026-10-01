@@ -22,9 +22,7 @@ jobs:
       - run: corepack enable
       - run: yarn install --immutable
       - name: Reject high-severity npm advisories
-        env:
-          YARN_NPM_REGISTRY_SERVER: https://registry.npmjs.org
-        run: yarn npm audit --all --recursive --severity high
+        run: yarn dlx audit-ci@7 --high --package-manager yarn --registry https://registry.npmjs.org
       - run: yarn hardhat:compile
       - name: Run Hedera-backed Hardhat tests
         run: |
