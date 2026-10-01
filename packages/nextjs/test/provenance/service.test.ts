@@ -103,3 +103,29 @@ test("verifyEvidence rejects a matching digest with the wrong attested size", as
   assert.equal(result.verified, false);
   assert.equal(result.attestation, null);
 });
+
+
+test("anchorEvidence validates metadata before pinning bytes", async () => {
+  let pinned = false;
+  const service = createProvenanceService(
+    dependencies({
+      addEvidence: async () => {
+        pinned = true;
+        return cid;
+      },
+    }),
+  );
+
+  await assert.rejects(
+    () =>
+      service.anchorEvidence({
+        bytes: Buffer.from("exact bytes"),
+        sourceUri: "doi:10.1000/example",
+        title: "evidence.txt",
+        mimeType: "text/plain",
+      }),
+    /HTTP or HTTPS/i,
+  );
+
+  assert.equal(pinned, false);
+});

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { MAX_EVIDENCE_BYTES, MAX_MULTIPART_BODY_BYTES, anchorEvidence } from "~~/lib/provenance";
 import { provenanceErrorResponse } from "~~/lib/provenance/api";
+import { readRequestBodyWithLimit } from "~~/lib/provenance/network";
 import { acquireAnchorSlot, requireWriteAuthorization } from "~~/lib/provenance/security";
 
 export const runtime = "nodejs";
@@ -10,18 +11,15 @@ export async function POST(request: Request) {
 
   try {
     requireWriteAuthorization(request);
-
-    const contentLength = Number(request.headers.get("content-length"));
-    if (Number.isFinite(contentLength) && contentLength > MAX_MULTIPART_BODY_BYTES) {
-      return NextResponse.json(
-        { error: "request body exceeds the template limit", code: "PAYLOAD_TOO_LARGE" },
-        { status: 413 },
-      );
-    }
-
     releaseSlot = acquireAnchorSlot();
 
-    const formData = await request.formData();
+    const body = await readRequestBodyWithLimit(request, MAX_MULTIPART_BODY_BYTES);
+    const boundedRequest = new Request(request.url, {
+      method: request.method,
+      headers: request.headers,
+      body: new Uint8Array(body).buffer,
+    });
+    const formData = await boundedRequest.formData();
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
