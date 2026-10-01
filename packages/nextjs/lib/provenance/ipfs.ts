@@ -23,12 +23,13 @@ export async function addEvidenceToIpfs(bytes: Uint8Array): Promise<string> {
 
 export async function fetchEvidenceFromIpfs(cid: string): Promise<Uint8Array> {
   const config = getProvenanceConfig();
-  const response = await fetchWithTimeout(
+  return fetchWithTimeout(
     `${config.ipfsGatewayUrl}/ipfs/${encodeURIComponent(cid)}`,
     { cache: "no-store" },
     config.externalTimeoutMs,
+    async response => {
+      if (!response.ok) throw upstreamError(`IPFS gateway returned HTTP ${response.status}.`);
+      return readBytesWithLimit(response, MAX_EVIDENCE_BYTES);
+    },
   );
-
-  if (!response.ok) throw upstreamError(`IPFS gateway returned HTTP ${response.status}.`);
-  return readBytesWithLimit(response, MAX_EVIDENCE_BYTES);
 }
