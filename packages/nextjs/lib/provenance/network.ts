@@ -64,11 +64,7 @@ export async function readBytesWithLimit(response: Response, maxBytes: number): 
     throw payloadTooLarge("Retrieved evidence exceeds the 5 MiB verification limit.");
   }
 
-  return readStreamWithLimit(
-    response.body,
-    maxBytes,
-    "Retrieved evidence exceeds the 5 MiB verification limit.",
-  );
+  return readStreamWithLimit(response.body, maxBytes, "Retrieved evidence exceeds the 5 MiB verification limit.");
 }
 
 export async function readRequestBodyWithLimit(request: Request, maxBytes: number): Promise<Uint8Array> {
